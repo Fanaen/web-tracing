@@ -16,7 +16,7 @@
 
     "install": "rustup component add rustfmt && cargo install cargo-bloat",
     "fmt": "cd ./apps/wasm-module && cargo fmt && cd ../server && cargo fmt",
-    "bloat:functions": "cd ./apps/wasm-module && cargo bloat --release -n 20",
-    "bloat:deps": "cd ./apps/wasm-module && cargo bloat --release --crates -n 20"
+    "bloat:functions": "cd ./apps/wasm-module && cargo bloat --release",
+    "bloat:deps": "cd ./apps/wasm-module && cargo bloat --release --crates"
   }
 }

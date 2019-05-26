@@ -48,12 +48,16 @@ yarn run:viewer
  
 ### Utilitaires
 ```bash
+# -- Style --
 # Reformater le code Rust (avec rust-fmt)
 yarn fmt
 
+# -- Bloat --
 # Afficher les plus grosses fonctions dans wasm-module
 yarn bloat:functions
+yarn bloat:functions -n 100 # pour en afficher 100
 
 # Afficher les plus grosses dépendances dans wasm-module
-yarn bloat:functions
+yarn bloat:deps
+yarn bloat:deps -n 100 # pour en afficher 100
 ```
