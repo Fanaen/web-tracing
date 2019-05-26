@@ -25,7 +25,7 @@ La version native du path-tracer
  - Construire le serveur : `yarn build:server`
  - Construire et lancer le serveur : `yarn run:server`
  
-### server
+### viewer
 Une GUI pour tester le path-tracer
  - Construire le viewer : `yarn build:viewer`
  - Lancer le viewer : `yarn run:viewer`
