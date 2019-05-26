@@ -11,7 +11,7 @@
     "webpack-dev-server": "^3.1.5",
     "copy-webpack-plugin": "^5.0.0"
   },
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "build": "yarn && webpack --config webpack.config.js",
     "start": "webpack-dev-server"

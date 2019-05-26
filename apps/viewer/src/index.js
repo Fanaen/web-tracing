@@ -1,4 +1,4 @@
-import * as wasm from '../wasm-module/pkg/web_tracing';
+import * as wasm from '../../wasm-module/pkg/web_tracing';
 
 wasm.greet()
 
