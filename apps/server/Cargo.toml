@@ -1,0 +1,10 @@
+[package]
+name = "web-tracing-server"
+description = "Version native de web-tracing pour le debug et le profiling"
+version = "0.1.0"
+repository = "https://github.com/Fanaen/web-tracing"
+edition = "2018"
+license = "MIT"
+
+[dependencies]
+web-tracing = { path = "../wasm-module" }
