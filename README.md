@@ -19,3 +19,13 @@ Outils requis pour compiler le projet :
 Le module utilisable directement depuis le navigateur.
  - Construire le module : `yarn build:wasm-module`
  - Tester le module : `yarn test:wasm-module`
+ 
+### server
+La version native du path-tracer
+ - Construire le serveur : `yarn build:server`
+ - Construire et lancer le serveur : `yarn run:server`
+ 
+### server
+Une GUI pour tester le path-tracer
+ - Construire le viewer : `yarn build:viewer`
+ - Lancer le viewer : `yarn run:viewer`

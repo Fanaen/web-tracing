@@ -7,8 +7,10 @@
   "scripts": {
     "build:wasm-module": "wasm-pack build ./apps/wasm-module/",
     "build:server": "cargo build --manifest-path=./apps/server/Cargo.toml",
+    "build:viewer": "yarn --cwd ./apps/viewer",
 
     "run:server": "cargo run --manifest-path=./apps/server/Cargo.toml",
+    "run:viewer": "yarn build:viewer && yarn --cwd ./apps/viewer start",
 
     "test:wasm-module": "wasm-pack test ./apps/wasm-module/ --firefox"
   }
