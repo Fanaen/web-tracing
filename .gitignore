@@ -1,4 +1,5 @@
-/target
+/apps/*/target
+/apps/*/pkg
 **/*.rs.bk
 bin/
 pkg/

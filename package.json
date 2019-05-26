@@ -1,0 +1,11 @@
+{
+  "name": "web-tracing",
+  "version": "0.1.0",
+  "description": "Path tracer à embarquer dans une application web",
+  "repository": "git@github.com:Fanaen/web-tracing.git",
+  "license": "MIT",
+  "scripts": {
+    "build:wasm-module": "wasm-pack build ./apps/wasm-module/",
+    "test:wasm-module": "wasm-pack test ./apps/wasm-module/ --firefox"
+  }
+}

@@ -1,8 +1,11 @@
 [package]
 name = "web-tracing"
+description = "Path tracer à embarquer dans une application web"
 version = "0.1.0"
 authors = ["Fanaen <contact@fanaen.fr>"]
+repository = "https://github.com/Fanaen/web-tracing"
 edition = "2018"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
