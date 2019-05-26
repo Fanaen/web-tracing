@@ -3,7 +3,9 @@
 **/*.rs.bk
 bin/
 pkg/
-wasm-pack.log
 node_modules/
+
+wasm-pack.log
+yarn-error.log
 
 .idea/
