@@ -7,7 +7,7 @@ Web-tracing est composé :
  - du path tracer sous forme d'un module javascript, le coeur du projet, `wasm-module`
  - d'un serveur et d'un viewer pour pouvoir tester/profiler le path tracer
 
-## 🚴 Prérequis
+## Contribution
 
 Outils requis pour compiler le projet :
  - [Rust (à installer avec rustup)](https://rustup.rs/)
