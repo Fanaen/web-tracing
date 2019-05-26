@@ -1,8 +1,8 @@
-mod utils;
 pub mod intersections;
+mod utils;
 
-use wasm_bindgen::prelude::*;
 use intersections::Vector3;
+use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -11,7 +11,7 @@ use intersections::Vector3;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-extern {
+extern "C" {
     fn alert(s: &str);
 }
 
@@ -21,11 +21,23 @@ pub fn greet() {
 }
 
 #[wasm_bindgen]
-pub fn benchmark(origin: Vector3) -> u32 { // , direction: Vector3
+pub fn benchmark(origin: Vector3) -> u32 {
+    // , direction: Vector3
     let mut intersections = 0;
 
     for i in 0..1000 {
-        if dist_to_sphere(origin.clone(), Vector3 { x: i as f32, y: i as f32, z: i as f32}, 1.0).abs() < 20.0 {
+        if dist_to_sphere(
+            origin.clone(),
+            Vector3 {
+                x: i as f32,
+                y: i as f32,
+                z: i as f32,
+            },
+            1.0,
+        )
+        .abs()
+            < 20.0
+        {
             intersections += 1;
         }
     }
@@ -56,5 +68,3 @@ pub fn benchmark(origin: Vector3) -> u32 { // , direction: Vector3
 fn dist_to_sphere(p: Vector3, c: Vector3, r: f32) -> f32 {
     (p - c).length() - r
 }
-
-

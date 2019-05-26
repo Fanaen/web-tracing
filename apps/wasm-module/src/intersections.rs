@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 pub struct Vector3 {
     pub x: f32,
     pub y: f32,
-    pub z: f32
+    pub z: f32,
 }
 
 impl Add for Vector3 {
@@ -47,7 +47,7 @@ impl Mul<f32> for Vector3 {
 
 #[wasm_bindgen]
 impl Vector3 {
-    pub fn new(x: f32, y: f32, z:f32) -> Vector3 {
+    pub fn new(x: f32, y: f32, z: f32) -> Vector3 {
         Vector3 { x, y, z }
     }
 
@@ -55,4 +55,3 @@ impl Vector3 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 }
-

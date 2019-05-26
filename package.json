@@ -12,6 +12,9 @@
     "run:server": "cargo run --manifest-path=./apps/server/Cargo.toml",
     "run:viewer": "yarn --cwd ./apps/viewer start",
 
-    "test:wasm-module": "wasm-pack test ./apps/wasm-module/ --firefox"
+    "test:wasm-module": "wasm-pack test ./apps/wasm-module/ --firefox",
+
+    "setup": "rustup component add rustfmt",
+    "fmt": "cd ./apps/wasm-module && cargo fmt && cd ../server && cargo fmt"
   }
 }

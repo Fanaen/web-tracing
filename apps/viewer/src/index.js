@@ -1,6 +1,6 @@
 import * as wasm from '../../wasm-module/pkg/web_tracing';
 
-wasm.greet()
+wasm.greet();
 
 const t0 = performance.now();
 let result = 0;
@@ -9,4 +9,4 @@ for (let i = 0; i < 1000; i++) {
 }
 const t1 = performance.now();
 
-console.log("Result: " + result + " (" + ((t1 - t0)/1000) + " millisecondess)");
+console.log("Result: " + result + " (" + ((t1 - t0)/1000) + " millisecondes)");
