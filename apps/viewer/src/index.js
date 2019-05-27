@@ -1,7 +1,5 @@
 import * as wasm from '../../wasm-module/pkg/web_tracing';
 
-wasm.greet();
-
 const t0 = performance.now();
 let result = 0;
 for (let i = 0; i < 1000; i++) {
