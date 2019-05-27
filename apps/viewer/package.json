@@ -17,6 +17,7 @@
     "start": "webpack-dev-server"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.8.2",
     "aframe": "^0.9.2",
     "aframe-inspector": "^0.9.1"
   }
