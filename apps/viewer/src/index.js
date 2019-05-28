@@ -6,6 +6,16 @@ let ctx = undefined;
 if (canvas.getContext) {
     ctx = canvas.getContext('2d');
 }
+
+let focused = true;
+
+window.onfocus = function() {
+    focused = true;
+};
+window.onblur = function() {
+    focused = false;
+};
+
 function updateCanvas() {
     if (ctx) {
         const camera = document.getElementById('main-camera').components;
@@ -17,7 +27,16 @@ function updateCanvas() {
         wasm.draw(ctx, 320, 160, cameraPos, cameraRotation, camera.camera.camera.fov);
     }
 }
-updateCanvas();
+
+function realtimeUpdateCanvas() {
+    if (focused) 
+    {
+        updateCanvas();
+    }
+    setTimeout(() => realtimeUpdateCanvas(), 1000.0 / 12.0);
+}
+
+realtimeUpdateCanvas();
 
 // -- UX --
 // Update button
