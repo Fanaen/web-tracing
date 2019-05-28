@@ -1,5 +1,5 @@
-use wasm_bindgen::prelude::*;
 use nalgebra_glm::Vec3;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 #[derive(Debug, PartialEq, Clone)]
@@ -27,6 +27,10 @@ impl ConvertibleVec3 for Vector3 {
     }
 
     fn from_vec3(vec: Vec3) -> Vector3 {
-        Vector3 { x: vec.x, y: vec.y, z: vec.z }
+        Vector3 {
+            x: vec.x,
+            y: vec.y,
+            z: vec.z,
+        }
     }
 }

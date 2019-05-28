@@ -11,7 +11,10 @@ function updateCanvas() {
         const camera = document.getElementById('main-camera').components;
         console.log(camera);
         const cameraPos = wasm.Vector3.new(camera.position.data.x, camera.position.data.y, camera.position.data.z);
-        wasm.draw(ctx, 320, 160, cameraPos);
+        const cameraRotation = wasm.Vector3.new(camera.rotation.data.x, camera.rotation.data.y, camera.rotation.data.z);
+        console.log(camera.position.data);
+        console.log(camera.rotation.data);
+        wasm.draw(ctx, 320, 160, cameraPos, cameraRotation, camera.camera.camera.fov);
     }
 }
 updateCanvas();
@@ -23,7 +26,7 @@ drawButton.onclick = () => updateCanvas();
 
 // Update on F4
 document.onkeyup = function(e) {
-    if (e.key === 'F4') {
+    if (e.key === 'F9') {
         updateCanvas();
     }
 };
