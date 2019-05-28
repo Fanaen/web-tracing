@@ -5,9 +5,8 @@ use std::ops::Add;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
-
-use intersections::Vector3;
-use wasm_bindgen::prelude::*;
+use nalgebra_glm::Vec3;
+use crate::intersections::{Vector3, ConvertibleVec3};
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -27,32 +26,12 @@ pub fn greet() {
 
 #[wasm_bindgen]
 pub fn benchmark(origin: Vector3) -> u32 {
-    // , direction: Vector3
-    let mut intersections = 0;
-
-    for i in 0..1000 {
-        if dist_to_sphere(
-            origin.clone(),
-            Vector3 {
-                x: i as f32,
-                y: i as f32,
-                z: i as f32,
-            },
-            1.0,
-        )
-        .abs()
-            < 20.0
-        {
-            intersections += 1;
-        }
-    }
-
-    intersections
+    100
 }
 
-//fn does_intersect(origin: &Vector3, direction: &Vector3) -> bool {
+//fn does_intersect(origin: &Vec3, direction: &Vec3) -> bool {
 //    // analytic solution
-//    let L: Vector3 = orig;
+//    let L: Vec3 = orig;
 //    let a: f32 = dir.dotProduct(dir);
 //    let b: f32 = 2 * dir.dotProduct(L);
 //    let c: f32 = L.dotProduct(L) - radius2;
@@ -70,9 +49,6 @@ pub fn benchmark(origin: Vector3) -> u32 {
 //    true
 //}
 
-fn dist_to_sphere(p: Vector3, c: Vector3, r: f32) -> f32 {
-    (p - c).length() - r
-}
 
 #[wasm_bindgen]
 pub fn draw(
@@ -81,6 +57,8 @@ pub fn draw(
     height: u32,
     camera_pos: Vector3
 ) -> Result<(), JsValue> {
+    let camera_pos = camera_pos.to_vec3();
+
     let mut data = Vec::new();
 
     for x in 0..width {

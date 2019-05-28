@@ -18,6 +18,7 @@ if (canvas.getContext) {
 function updateCanvas() {
     if (ctx) {
         const camera = document.getElementById('main-camera').components;
+        console.log(camera);
         const cameraPos = wasm.Vector3.new(camera.position.data.x, camera.position.data.y, camera.position.data.z);
         wasm.draw(ctx, 320, 160, cameraPos);
     }
@@ -28,6 +29,13 @@ updateCanvas();
 // Update button
 const drawButton = document.getElementById('draw-web-tracing');
 drawButton.onclick = () => updateCanvas();
+
+// Update on F4
+document.onkeyup = function(e) {
+    if (e.key === 'F4') {
+        updateCanvas();
+    }
+};
 
 // Hide button
 const webtracingDisplay = document.getElementById('web-tracing-display');
