@@ -4,7 +4,7 @@ mod utils;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
-use nalgebra_glm::Vec3;
+use nalgebra_glm::{dot, Vec3};
 use crate::intersections::{Vector3, ConvertibleVec3};
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -69,7 +69,21 @@ pub struct Ray {
     pub direction: Vec3
 }
 
+fn hit_sphere(center: &Vec3, radius: f32, ray: &Ray) -> bool {
+    let oc: Vec3 = ray.origin - center;
+    let a: f32 = dot(&ray.direction, &ray.direction);
+    let b: f32 = 2. * dot(&oc, &ray.direction);
+    let c: f32 = dot(&oc, &oc) - radius * radius;
+    let discriminant: f32 = b * b - 4. * a * c;
+    discriminant > 0.
+}
+
 pub fn color(ray: Ray) -> Vec3 {
+    let center = Vec3::new(0., 0., -1.);
+    if hit_sphere(&center, 0.5, &ray) {
+        return Vec3::new(1., 0., 0.);
+    }
+
     let unit_direction = ray.direction.normalize();
     let t = 0.5 * (unit_direction.y + 1.);
     (1. - t) * Vec3::new(1.,1.,1.) + (t * Vec3::new(0.5, 0.7, 1.))
