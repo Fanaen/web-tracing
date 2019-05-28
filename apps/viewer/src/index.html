@@ -9,18 +9,17 @@
 <body>
 
   <div class="web-tracing">
-    <div class="card card-1" id="web-tracing-display">
-      <canvas id="web-tracing-canvas" width="320px" height="160px"></canvas>
-    </div>
+    <div class="card" id="web-tracing-display"><canvas id="web-tracing-canvas" width="320px" height="160px"></canvas></div>
     <div class="actions">
       <i class="btn fas fa-minus" id="close-web-tracing"></i>
+      <i class="btn fas fa-play" id="draw-web-tracing"></i>
     </div>
   </div>
   <a-scene inspector="url: http://localhost:8080/node_modules/aframe-inspector/dist/aframe-inspector.js" vr-mode-ui="enabled: false">
     <a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E"></a-sphere>
     <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
     <a-sky color="#ECECEC"></a-sky>
-    <a-entity camera look-controls position="0 1.6 0"></a-entity>
+    <a-entity id="main-camera" camera look-controls position="0 1.6 0"></a-entity>
   </a-scene>
   <script src="bootstrap.js"></script>
   <script src="http://localhost:8080/node_modules/aframe-inspector/dist/aframe-inspector.js"></script>

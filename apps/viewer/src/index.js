@@ -9,19 +9,26 @@ const t1 = performance.now();
 
 console.log("Result: " + result + " (" + ((t1 - t0)/1000) + " millisecondes)");
 
-// Test the canvas
+// Update the canvas
 const canvas = document.getElementById('web-tracing-canvas');
+let ctx = undefined;
 if (canvas.getContext) {
-    const ctx = canvas.getContext('2d');
-
-    ctx.fillStyle = 'rgb(200, 0, 0)';
-    ctx.fillRect(10, 10, 50, 50);
-
-    ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
-    ctx.fillRect(30, 30, 50, 50);
+    ctx = canvas.getContext('2d');
 }
+function updateCanvas() {
+    if (ctx) {
+        const camera = document.getElementById('main-camera').components;
+        const cameraPos = wasm.Vector3.new(camera.position.data.x, camera.position.data.y, camera.position.data.z);
+        wasm.draw(ctx, 320, 160, cameraPos);
+    }
+}
+updateCanvas();
 
 // -- UX --
+// Update button
+const drawButton = document.getElementById('draw-web-tracing');
+drawButton.onclick = () => updateCanvas();
+
 // Hide button
 const webtracingDisplay = document.getElementById('web-tracing-display');
 const hideButton = document.getElementById('close-web-tracing');

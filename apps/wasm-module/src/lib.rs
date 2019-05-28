@@ -1,6 +1,11 @@
 pub mod intersections;
 mod utils;
 
+use std::ops::Add;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::Clamped;
+use web_sys::{CanvasRenderingContext2d, ImageData};
+
 use intersections::Vector3;
 use wasm_bindgen::prelude::*;
 
@@ -67,4 +72,30 @@ pub fn benchmark(origin: Vector3) -> u32 {
 
 fn dist_to_sphere(p: Vector3, c: Vector3, r: f32) -> f32 {
     (p - c).length() - r
+}
+
+#[wasm_bindgen]
+pub fn draw(
+    ctx: &CanvasRenderingContext2d,
+    width: u32,
+    height: u32,
+    camera_pos: Vector3
+) -> Result<(), JsValue> {
+    let mut data = Vec::new();
+
+    for x in 0..width {
+        for y in 0..height {
+            data.push(clamp(camera_pos.x, 0., 255.) as u8);
+            data.push(clamp(camera_pos.y, 0., 255.) as u8);
+            data.push(clamp(camera_pos.z, 0., 255.) as u8);
+            data.push(255);
+        }
+    }
+
+    let data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut data), width, height)?;
+    ctx.put_image_data(&data, 0.0, 0.0,)
+}
+
+pub fn clamp(value: f32, min: f32, max: f32) -> f32 {
+    if value > max { max } else if value < min { min } else { value }
 }

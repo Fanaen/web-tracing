@@ -18,6 +18,7 @@
 
 #web-tracing-display {
     margin-right: -5px;
+    background: transparent;
 }
 
 #web-tracing-display.hidden {
