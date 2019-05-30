@@ -1,14 +1,14 @@
-use crate::intersections::Ray;
-use nalgebra_glm::{
-    cross, dot, inverse, look_at, normalize, pi, radians, rotate_vec3, vec4_to_vec3, Mat4, Quat,
-    Vec3, Vec4,
-};
+use crate::pathtracer::material::Material;
+use nalgebra_glm::{inverse, look_at, pi, rotate_vec3, vec4_to_vec3, Mat4, Vec3, Vec4};
 
 pub struct Camera {
     pub origin: Vec3,
     pub lower_left_corner: Vec3,
     pub horizontal: Vec3,
     pub vertical: Vec3,
+
+    pub width: u32,
+    pub height: u32,
 }
 
 impl Camera {
@@ -26,10 +26,10 @@ impl Camera {
         let axis_y = Vec3::new(0.0, 1.0, 0.0);
         let axis_z = Vec3::new(0.0, 0.0, 1.0);
 
-        let degToRadians = pi::<f32>() / 180.0;
-        camera_front = rotate_vec3(&camera_front, degToRadians * camera_rotation.x, &axis_x);
-        camera_front = rotate_vec3(&camera_front, degToRadians * camera_rotation.y, &axis_y);
-        camera_front = rotate_vec3(&camera_front, degToRadians * camera_rotation.z, &axis_z);
+        let deg_to_radians = pi::<f32>() / 180.0;
+        camera_front = rotate_vec3(&camera_front, deg_to_radians * camera_rotation.x, &axis_x);
+        camera_front = rotate_vec3(&camera_front, deg_to_radians * camera_rotation.y, &axis_y);
+        camera_front = rotate_vec3(&camera_front, deg_to_radians * camera_rotation.z, &axis_z);
         camera_front = camera_front.normalize();
 
         let camera_center = camera_pos + camera_front;
@@ -38,7 +38,7 @@ impl Camera {
 
         let aspect = (width as f32) / (height as f32);
         //console::log(&camera_fov.into());
-        let camera_fov = camera_fov * degToRadians;
+        let camera_fov = camera_fov * deg_to_radians;
         let projection_matrix = Mat4::new_perspective(aspect, camera_fov, 0.1, 10000.0);
         let view_matrix = look_at(&camera_pos, &camera_center, &camera_up);
 
@@ -63,6 +63,9 @@ impl Camera {
             lower_left_corner,
             horizontal,
             vertical,
+
+            width,
+            height,
         }
     }
 
@@ -73,5 +76,61 @@ impl Camera {
             origin: self.origin,
             direction: direction.normalize(),
         }
+    }
+}
+
+pub struct Ray {
+    pub origin: Vec3,
+    pub direction: Vec3,
+}
+
+impl Ray {
+    pub fn point_at_parameter(&self, t: f32) -> Vec3 {
+        self.origin + (t * self.direction)
+    }
+}
+
+pub struct Hit {
+    pub t: f32,
+    pub point: Vec3,
+    pub normal: Vec3,
+    pub material: Material,
+}
+
+pub trait Hitable {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<Hit>;
+}
+
+pub struct HitableList {
+    list: Vec<Box<Hitable>>,
+}
+
+impl HitableList {
+    pub fn new() -> HitableList {
+        HitableList {
+            list: Vec::<Box<Hitable>>::new(),
+        }
+    }
+
+    pub fn add(&mut self, hitable: Box<Hitable>) {
+        self.list.push(hitable);
+    }
+}
+
+impl Hitable for HitableList {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<Hit> {
+        let mut closest_so_far = t_max;
+        let mut closest_hit: Option<Hit> = None;
+
+        for hitable in &self.list {
+            let hit = hitable.hit(ray, t_min, closest_so_far);
+            if hit.is_some() {
+                let hit = hit.unwrap();
+                closest_so_far = hit.t;
+                closest_hit = Some(hit);
+            }
+        }
+
+        closest_hit
     }
 }

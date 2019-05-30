@@ -1,5 +1,5 @@
-use crate::intersections::{Hit, Hitable, Ray};
-use crate::material::Material;
+use crate::pathtracer::camera::{Hit, Hitable, Ray};
+use crate::pathtracer::material::Material;
 use nalgebra_glm::{dot, Vec3};
 
 pub struct Sphere {
@@ -27,8 +27,8 @@ impl Hitable for Sphere {
         let discriminant: f32 = (b * b) - (a * c);
 
         if discriminant > 0. {
-            let rootedDiscriminant = discriminant.sqrt();
-            let temp: f32 = (-b - rootedDiscriminant) / a;
+            let rooted_discriminant = discriminant.sqrt();
+            let temp: f32 = (-b - rooted_discriminant) / a;
 
             let point = ray.point_at_parameter(temp);
             if temp < t_max && temp > t_min {
@@ -40,7 +40,7 @@ impl Hitable for Sphere {
                 });
             }
 
-            let temp: f32 = (-b + rootedDiscriminant) / a;
+            let temp: f32 = (-b + rooted_discriminant) / a;
             if temp < t_max && temp > t_min {
                 let point = ray.point_at_parameter(temp);
                 return Some(Hit {
