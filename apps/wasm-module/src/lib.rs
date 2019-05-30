@@ -52,45 +52,8 @@ pub fn draw(
     let dataSize = (width * height) as usize;
     let mut data = Vec::with_capacity(dataSize);
 
-    let mut world = HitableList::new();
-    world.add(Box::from(Sphere::new(
-        Vec3::new(0., 0., -1.),
-        0.5,
-        Material::Lambert(LambertianMaterial {
-            albedo: Vec3::new(0.8, 0.3, 0.3),
-        }),
-    )));
-    world.add(Box::from(Sphere::new(
-        Vec3::new(0., -100.5, -1.),
-        100.,
-        Material::Lambert(LambertianMaterial {
-            albedo: Vec3::new(0.8, 0.8, 0.),
-        }),
-    )));
-    world.add(Box::from(Sphere::new(
-        Vec3::new(1., 0., -1.),
-        0.5,
-        Material::Metal(MetalMaterial {
-            albedo: Vec3::new(0.8, 0.6, 0.2),
-            fuzz: 1.
-        }),
-    )));
-    world.add(Box::from(Sphere::new(
-        Vec3::new(-1., 0., -1.),
-        0.5,
-        Material::Dielectric(DielectricMaterial {
-            refract_index: 1.5
-        }),
-    )));
-    world.add(Box::from(Sphere::new(
-        Vec3::new(-1., 0., -1.),
-        -0.45,
-        Material::Dielectric(DielectricMaterial {
-            refract_index: 1.5
-        }),
-    )));
-
     let mut rng = rand::thread_rng();
+    let world = random_spheres(&mut rng);
 
     let samples = 16;
     for y in (0..height).rev() {
@@ -113,6 +76,93 @@ pub fn draw(
 
     let data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut data), width, height)?;
     ctx.put_image_data(&data, 0.0, 0.0)
+}
+
+pub fn random_spheres(rng: &mut ThreadRng) -> HitableList {
+    let mut world = HitableList::new();
+
+    // Le sol
+    world.add(Box::from(Sphere::new(
+        Vec3::new(0., -1000., 0.),
+        1000.,
+        Material::Lambert(LambertianMaterial {
+            albedo: Vec3::new(0.5, 0.5, 0.5),
+        }),
+    )));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat: f32 = rng.gen_range(0., 1.);
+            let center: Vec3 = Vec3::new(
+                a as f32 + 0.9 * rng.gen_range(0., 1.),
+                0.2,
+                b as f32 + 0.9 * rng.gen_range(0., 1.)
+            );
+
+            if (center - Vec3::new(4., 0.2, 0.)).magnitude() > 0.9 {
+                if choose_mat < 0.8 {
+                    world.add(Box::from(Sphere::new(
+                        center,
+                        0.2,
+                        Material::Lambert(LambertianMaterial {
+                            albedo: Vec3::new(
+                                rng.gen_range(0., 1.) * rng.gen_range(0., 1.),
+                                rng.gen_range(0., 1.) * rng.gen_range(0., 1.),
+                                rng.gen_range(0., 1.) * rng.gen_range(0., 1.)),
+                        }),
+                    )));
+                }
+                else if choose_mat < 1. {
+                    world.add(Box::from(Sphere::new(
+                        center,
+                        0.2,
+                        Material::Metal(MetalMaterial {
+                            albedo: Vec3::new(
+                                0.5 * ( 1. + rng.gen_range(0., 1.)),
+                                0.5 * ( 1. + rng.gen_range(0., 1.)),
+                                0.5 * ( 1. + rng.gen_range(0., 1.))),
+                            fuzz: 0.5 * rng.gen_range(0., 1.)
+                        }),
+                    )));
+                }
+                else {
+//                    world.add(Box::from(Sphere::new(
+//                        center,
+//                        0.2,
+//                        Material::Dielectric(DielectricMaterial {
+//                            refract_index: 1.5
+//                        }),
+//                    )));
+                }
+
+            }
+        }
+    }
+
+    world.add(Box::from(Sphere::new(
+        Vec3::new(-4., 1., 0.),
+        1.,
+        Material::Lambert(LambertianMaterial {
+            albedo: Vec3::new(0.4, 0.2, 0.1),
+        }),
+    )));
+    world.add(Box::from(Sphere::new(
+        Vec3::new(4., 1., 0.),
+        1.,
+        Material::Metal(MetalMaterial {
+            albedo: Vec3::new(0.7, 0.6, 0.5),
+            fuzz: 0.
+        }),
+    )));
+//    world.add(Box::from(Sphere::new(
+//        Vec3::new(0., 1., 0.),
+//        1.,
+//        Material::Dielectric(DielectricMaterial {
+//            refract_index: 1.5
+//        }),
+//    )));
+
+    world
 }
 
 pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
