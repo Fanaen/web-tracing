@@ -57,12 +57,14 @@ pub trait Hitable {
 }
 
 pub struct HitableList {
-    list: Vec<Box<Hitable>>
+    list: Vec<Box<Hitable>>,
 }
 
 impl HitableList {
     pub fn new() -> HitableList {
-        HitableList { list: Vec::<Box<Hitable>>::new() }
+        HitableList {
+            list: Vec::<Box<Hitable>>::new(),
+        }
     }
 
     pub fn add(&mut self, hitable: Box<Hitable>) {
@@ -87,4 +89,3 @@ impl Hitable for HitableList {
         closest_hit
     }
 }
-

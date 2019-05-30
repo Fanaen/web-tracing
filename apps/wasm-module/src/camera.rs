@@ -1,8 +1,8 @@
+use crate::intersections::Ray;
 use nalgebra_glm::{
     cross, dot, inverse, look_at, normalize, pi, radians, rotate_vec3, vec4_to_vec3, Mat4, Quat,
     Vec3, Vec4,
 };
-use crate::intersections::Ray;
 
 pub struct Camera {
     pub origin: Vec3,
@@ -12,7 +12,13 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(camera_pos: Vec3, camera_rotation: Vec3, camera_fov: f32, width: u32, height: u32) -> Camera {
+    pub fn new(
+        camera_pos: Vec3,
+        camera_rotation: Vec3,
+        camera_fov: f32,
+        width: u32,
+        height: u32,
+    ) -> Camera {
         let camera_up = Vec3::new(0.0, 1.0, 0.0);
         let mut camera_front = Vec3::new(0.0, 0.0, -1.0);
 
@@ -48,22 +54,24 @@ impl Camera {
         let lower_left_corner = vec4_to_vec3(&(plane_lower_left / plane_lower_left.w));
 
         // Get the horizontal and vertical vectors of the frame.
-        let horizontal = vec4_to_vec3(&(plane_lower_right / plane_lower_right.w)) - lower_left_corner;
+        let horizontal =
+            vec4_to_vec3(&(plane_lower_right / plane_lower_right.w)) - lower_left_corner;
         let vertical = vec4_to_vec3(&(plane_upper_left / plane_upper_left.w)) - lower_left_corner;
 
         Camera {
             origin: camera_pos,
             lower_left_corner,
             horizontal,
-            vertical
+            vertical,
         }
     }
 
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
-        let direction = self.lower_left_corner
-            + (u * self.horizontal)
-            + (v * self.vertical)
-            - self.origin;
-        Ray { origin: self.origin, direction: direction.normalize() }
+        let direction =
+            self.lower_left_corner + (u * self.horizontal) + (v * self.vertical) - self.origin;
+        Ray {
+            origin: self.origin,
+            direction: direction.normalize(),
+        }
     }
 }

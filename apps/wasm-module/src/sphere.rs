@@ -1,9 +1,9 @@
-use nalgebra_glm::{Vec3, dot};
-use crate::intersections::{Ray, Hitable, Hit};
+use crate::intersections::{Hit, Hitable, Ray};
+use nalgebra_glm::{dot, Vec3};
 
 pub struct Sphere {
     center: Vec3,
-    radius: f32
+    radius: f32,
 }
 
 impl Sphere {
@@ -26,12 +26,11 @@ impl Hitable for Sphere {
 
             let point = ray.point_at_parameter(temp);
             if temp < t_max && temp > t_min {
-
                 return Some(Hit {
                     t: temp,
                     point,
                     normal: ((point - self.center) / self.radius).normalize(),
-                })
+                });
             }
 
             let temp: f32 = (-b + rootedDiscriminant) / a;
@@ -41,7 +40,7 @@ impl Hitable for Sphere {
                     t: temp,
                     point,
                     normal: ((point - self.center) / self.radius).normalize(),
-                })
+                });
             }
         }
 

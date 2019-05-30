@@ -1,16 +1,16 @@
-pub mod intersections;
-mod utils;
-mod sphere;
 mod camera;
+pub mod intersections;
+mod sphere;
+mod utils;
 
-use crate::intersections::{ConvertibleVec3, Vector3, Ray, HitableList, Hitable};
+use crate::camera::Camera;
+use crate::intersections::{ConvertibleVec3, Hitable, HitableList, Ray, Vector3};
+use crate::sphere::Sphere;
 use nalgebra_glm::Vec3;
+use rand::Rng;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
-use crate::sphere::Sphere;
-use crate::camera::Camera;
-use rand::Rng;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -37,7 +37,13 @@ pub fn draw(
     camera_rotation: Vector3,
     camera_fov: f32,
 ) -> Result<(), JsValue> {
-    let camera = Camera::new(camera_pos.to_vec3(), camera_rotation.to_vec3(), camera_fov, width, height);
+    let camera = Camera::new(
+        camera_pos.to_vec3(),
+        camera_rotation.to_vec3(),
+        camera_fov,
+        width,
+        height,
+    );
 
     let dataSize = (width * height) as usize;
     let mut data = Vec::with_capacity(dataSize);
@@ -77,7 +83,7 @@ pub fn color(ray: Ray, world: &HitableList) -> Vec3 {
             // Quand on a un hit, on affiche la couleur en fonction de la normale
             let N = hit.normal;
             0.5 * Vec3::new(N.x + 1., N.y + 1., N.z + 1.)
-        },
+        }
         Option::None => {
             // On affiche le fond sinon
             let unit_direction = ray.direction.normalize();
