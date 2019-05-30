@@ -33,7 +33,7 @@ function realtimeUpdateCanvas() {
     {
         updateCanvas();
     }
-    setTimeout(() => realtimeUpdateCanvas(), 1000.0 / 12.0);
+    setTimeout(() => realtimeUpdateCanvas(), 5000);
 }
 
 realtimeUpdateCanvas();

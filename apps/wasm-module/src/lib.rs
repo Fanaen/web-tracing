@@ -11,6 +11,7 @@ use rand::Rng;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
+use rand::prelude::ThreadRng;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -62,7 +63,7 @@ pub fn draw(
                 let u = (x as f32 + rng.gen_range(0., 1.)) / width as f32;
                 let v = (y as f32 + rng.gen_range(0., 1.)) / height as f32;
                 let ray = camera.get_ray(u, v);
-                col = col + color(ray, &world);
+                col = col + color(ray, &world, &mut rng);
             }
 
             col = col / samples as f32;
@@ -77,12 +78,36 @@ pub fn draw(
     ctx.put_image_data(&data, 0.0, 0.0)
 }
 
-pub fn color(ray: Ray, world: &HitableList) -> Vec3 {
+pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
+    let mut p: Vec3 =
+        2. * Vec3::new(
+            rng.gen_range(0., 1.),
+            rng.gen_range(0., 1.),
+            rng.gen_range(0., 1.),
+        ) - Vec3::new(1., 1., 1.);
+
+    while p.magnitude_squared() > 1. {
+        p =
+            2. * Vec3::new(
+                rng.gen_range(0., 1.),
+                rng.gen_range(0., 1.),
+                rng.gen_range(0., 1.),
+            ) - Vec3::new(1., 1., 1.);
+    }
+
+    p
+}
+
+pub fn color(ray: Ray, world: &HitableList, rng: &mut ThreadRng) -> Vec3 {
     match world.hit(&ray, 0., std::f32::MAX) {
         Option::Some(hit) => {
-            // Quand on a un hit, on affiche la couleur en fonction de la normale
-            let N = hit.normal;
-            0.5 * Vec3::new(N.x + 1., N.y + 1., N.z + 1.)
+            let target = hit.point.clone() + hit.normal + random_in_unit_sphere(rng);
+            let diffuseRay = Ray {
+                origin: hit.point,
+                direction: target - hit.point,
+            };
+
+            0.5 * color(diffuseRay, world, rng)
         }
         Option::None => {
             // On affiche le fond sinon
