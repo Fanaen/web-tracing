@@ -1,7 +1,8 @@
 pub mod intersections;
 mod utils;
+mod sphere;
 
-use crate::intersections::{ConvertibleVec3, Vector3};
+use crate::intersections::{ConvertibleVec3, Vector3, Ray, HitableList, Hitable};
 use nalgebra_glm::{
     cross, dot, inverse, look_at, normalize, pi, radians, rotate_vec3, vec4_to_vec3, Mat4, Quat,
     Vec3, Vec4,
@@ -9,6 +10,7 @@ use nalgebra_glm::{
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
+use crate::sphere::Sphere;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -79,6 +81,10 @@ pub fn draw(
     let mut data = Vec::with_capacity(dataSize);
     let origin = camera_pos;
 
+    let mut world = HitableList::new();
+    world.add(Box::from(Sphere::new(Vec3::new(0., 0., -1.), 0.5)));
+    world.add(Box::from(Sphere::new(Vec3::new(0., -100.5, -1.), 100.)));
+
     for y in (0..height).rev() {
         for x in 0..width {
             let u = x as f32 / width as f32;
@@ -86,7 +92,7 @@ pub fn draw(
             let direction = (lower_left + (u * horizontal) + (v * vertical) - origin).normalize();
             let ray = Ray { origin, direction };
 
-            let col = color(ray);
+            let col = color(ray, &world);
 
             data.push((255.99 * col.x) as u8);
             data.push((255.99 * col.y) as u8);
@@ -101,29 +107,30 @@ pub fn draw(
     ctx.put_image_data(&data, 0.0, 0.0)
 }
 
-pub struct Ray {
-    pub origin: Vec3,
-    pub direction: Vec3,
-}
-
-fn hit_sphere(center: &Vec3, radius: f32, ray: &Ray) -> bool {
-    let oc: Vec3 = ray.origin - center;
-    let a: f32 = dot(&ray.direction, &ray.direction);
-    let b: f32 = 2. * dot(&oc, &ray.direction);
-    let c: f32 = dot(&oc, &oc) - radius * radius;
-    let discriminant: f32 = b * b - 4. * a * c;
-    discriminant > 0.
-}
-
-pub fn color(ray: Ray) -> Vec3 {
-    let center = Vec3::new(0., 0., -1.);
-    if hit_sphere(&center, 0.5, &ray) {
-        return Vec3::new(1., 0., 0.);
+pub fn color(ray: Ray, world: &HitableList) -> Vec3 {
+    match world.hit(&ray, 0., std::f32::MAX) {
+        Option::Some(hit) => {
+            // Quand on a un hit, on affiche la couleur en fonction de la normale
+            let N = hit.normal;
+            0.5 * Vec3::new(N.x + 1., N.y + 1., N.z + 1.)
+        },
+        Option::None => {
+            // On affiche le fond sinon
+            let unit_direction = ray.direction.normalize();
+            let t = 0.5 * (unit_direction.y + 1.);
+            (1. - t) * Vec3::new(1., 1., 1.) + (t * Vec3::new(0.5, 0.7, 1.))
+        }
     }
-
-    let unit_direction = ray.direction.normalize();
-    let t = 0.5 * (unit_direction.y + 1.);
-    (1. - t) * Vec3::new(1., 1., 1.) + (t * Vec3::new(0.5, 0.7, 1.))
+//    let center = Vec3::new(0., 0., -1.);
+//    let t = hit_sphere(&center, 0.5, &ray);
+//    if t > 0. {
+//        let N: Vec3 = (ray.point_at_parameter(t) - Vec3::new(0., 0., -1.)).normalize();
+//        return 0.5 * Vec3::new(N.x + 1., N.y + 1., N.z + 1.);
+//    }
+//
+//    let unit_direction = ray.direction.normalize();
+//    let t = 0.5 * (unit_direction.y + 1.);
+//    (1. - t) * Vec3::new(1., 1., 1.) + (t * Vec3::new(0.5, 0.7, 1.))
 }
 
 pub fn clamp(value: f32, min: f32, max: f32) -> f32 {
