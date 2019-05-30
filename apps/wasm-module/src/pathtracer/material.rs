@@ -1,33 +1,26 @@
 use crate::pathtracer::camera::{Hit, Ray};
 use crate::pathtracer::random_in_unit_sphere;
+use enum_dispatch::enum_dispatch;
 use nalgebra_glm::{dot, Vec3};
 use rand::prelude::ThreadRng;
 use rand::Rng;
 
-#[derive(Clone)]
-pub enum Material {
-    Lambert(LambertianMaterial),
-    Metal(MetalMaterial),
-    Dielectric(DielectricMaterial),
-}
-
+#[enum_dispatch(Material)]
 pub trait MaterialTrait {
     fn scatter(&self, ray: &Ray, hit: &Hit, rng: &mut ThreadRng) -> Option<ScatterResult>;
+}
+
+#[enum_dispatch]
+#[derive(Clone)]
+pub enum Material {
+    LambertianMaterial,
+    MetalMaterial,
+    DielectricMaterial,
 }
 
 pub struct ScatterResult {
     pub attenuation: Vec3,
     pub scattered: Ray,
-}
-
-impl MaterialTrait for Material {
-    fn scatter(&self, ray: &Ray, hit: &Hit, rng: &mut ThreadRng) -> Option<ScatterResult> {
-        match self {
-            Material::Lambert(lambert) => lambert.scatter(ray, hit, rng),
-            Material::Metal(metal) => metal.scatter(ray, hit, rng),
-            Material::Dielectric(dielectric) => dielectric.scatter(ray, hit, rng),
-        }
-    }
 }
 
 #[derive(Clone)]

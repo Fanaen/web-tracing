@@ -1,5 +1,7 @@
 use crate::pathtracer::camera::{Camera, Hitable, HitableList, Ray};
-use crate::pathtracer::material::{LambertianMaterial, Material, MaterialTrait, MetalMaterial};
+use crate::pathtracer::material::{
+    DielectricMaterial, LambertianMaterial, MaterialTrait, MetalMaterial,
+};
 use crate::pathtracer::sphere::Sphere;
 use nalgebra_glm::Vec3;
 use rand::prelude::ThreadRng;
@@ -43,9 +45,10 @@ impl PathTracer {
         self.world.add(Box::from(Sphere::new(
             Vec3::new(0., -1000., 0.),
             1000.,
-            Material::Lambert(LambertianMaterial {
+            LambertianMaterial {
                 albedo: Vec3::new(0.5, 0.5, 0.5),
-            }),
+            }
+            .into(),
         )));
 
         for a in -11..11 {
@@ -62,35 +65,35 @@ impl PathTracer {
                         self.world.add(Box::from(Sphere::new(
                             center,
                             0.2,
-                            Material::Lambert(LambertianMaterial {
+                            LambertianMaterial {
                                 albedo: Vec3::new(
                                     self.rng.gen_range(0., 1.) * self.rng.gen_range(0., 1.),
                                     self.rng.gen_range(0., 1.) * self.rng.gen_range(0., 1.),
                                     self.rng.gen_range(0., 1.) * self.rng.gen_range(0., 1.),
                                 ),
-                            }),
+                            }
+                            .into(),
                         )));
                     } else if choose_mat < 1. {
                         self.world.add(Box::from(Sphere::new(
                             center,
                             0.2,
-                            Material::Metal(MetalMaterial {
+                            MetalMaterial {
                                 albedo: Vec3::new(
                                     0.5 * (1. + self.rng.gen_range(0., 1.)),
                                     0.5 * (1. + self.rng.gen_range(0., 1.)),
                                     0.5 * (1. + self.rng.gen_range(0., 1.)),
                                 ),
                                 fuzz: 0.5 * self.rng.gen_range(0., 1.),
-                            }),
+                            }
+                            .into(),
                         )));
                     } else {
-                        //                    self.world.add(Box::from(Sphere::new(
-                        //                        center,
-                        //                        0.2,
-                        //                        Material::Dielectric(DielectricMaterial {
-                        //                            refract_index: 1.5
-                        //                        }),
-                        //                    )));
+//                        self.world.add(Box::from(Sphere::new(
+//                            center,
+//                            0.2,
+//                            DielectricMaterial { refract_index: 1.5 }.into(),
+//                        )));
                     }
                 }
             }
@@ -99,25 +102,25 @@ impl PathTracer {
         self.world.add(Box::from(Sphere::new(
             Vec3::new(-4., 1., 0.),
             1.,
-            Material::Lambert(LambertianMaterial {
+            LambertianMaterial {
                 albedo: Vec3::new(0.4, 0.2, 0.1),
-            }),
+            }
+            .into(),
         )));
         self.world.add(Box::from(Sphere::new(
             Vec3::new(4., 1., 0.),
             1.,
-            Material::Metal(MetalMaterial {
+            MetalMaterial {
                 albedo: Vec3::new(0.7, 0.6, 0.5),
                 fuzz: 0.,
-            }),
+            }
+            .into(),
         )));
-        //    self.world.add(Box::from(Sphere::new(
-        //        Vec3::new(0., 1., 0.),
-        //        1.,
-        //        Material::Dielectric(DielectricMaterial {
-        //            refract_index: 1.5
-        //        }),
-        //    )));
+//        self.world.add(Box::from(Sphere::new(
+//            Vec3::new(0., 1., 0.),
+//            1.,
+//            DielectricMaterial { refract_index: 1.5 }.into(),
+//        )));
     }
 }
 
