@@ -50,6 +50,7 @@ impl MaterialTrait for LambertianMaterial {
 #[derive(Clone)]
 pub struct MetalMaterial {
     pub albedo: Vec3,
+    pub fuzz: f32,
 }
 
 fn reflect(v: &Vec3, normal: &Vec3) -> Vec3 {
@@ -61,7 +62,7 @@ impl MaterialTrait for MetalMaterial {
         let reflected: Vec3 = reflect(&ray.direction.normalize(), &hit.normal);
         let scattered = Ray {
             origin: hit.point,
-            direction: reflected,
+            direction: reflected + self.fuzz * random_in_unit_sphere(rng),
         };
         let attenuation = self.albedo;
 
