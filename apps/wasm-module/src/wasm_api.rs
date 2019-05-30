@@ -18,8 +18,8 @@ pub fn draw(
     set_panic_hook();
 
     let camera = Camera::new(
-        camera_pos.to_vec3(),
-        camera_rotation.to_vec3(),
+        camera_pos.into(),
+        camera_rotation.into(),
         camera_fov,
         width,
         height,
@@ -63,21 +63,14 @@ impl Vector3 {
     }
 }
 
-pub trait ConvertibleVec3 {
-    fn to_vec3(self) -> Vec3;
-    fn from_vec3(vec: Vec3) -> Vector3;
+impl From<Vec3> for Vector3 {
+    fn from(vec: Vec3) -> Self {
+        Vector3::new(vec.x, vec.y, vec.z)
+    }
 }
 
-impl ConvertibleVec3 for Vector3 {
-    fn to_vec3(self) -> Vec3 {
+impl Into<Vec3> for Vector3 {
+    fn into(self) -> Vec3 {
         Vec3::new(self.x, self.y, self.z)
-    }
-
-    fn from_vec3(vec: Vec3) -> Vector3 {
-        Vector3 {
-            x: vec.x,
-            y: vec.y,
-            z: vec.z,
-        }
     }
 }
