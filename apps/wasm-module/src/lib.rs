@@ -7,7 +7,7 @@ mod utils;
 use crate::camera::Camera;
 use crate::intersections::{ConvertibleVec3, Hitable, HitableList, Ray, Vector3};
 use crate::material::Material::Lambert;
-use crate::material::{Material, MaterialTrait, MetalMaterial, LambertianMaterial};
+use crate::material::{Material, MaterialTrait, MetalMaterial, LambertianMaterial, DielectricMaterial};
 use crate::sphere::Sphere;
 use nalgebra_glm::Vec3;
 use rand::prelude::ThreadRng;
@@ -78,9 +78,15 @@ pub fn draw(
     world.add(Box::from(Sphere::new(
         Vec3::new(-1., 0., -1.),
         0.5,
-        Material::Metal(MetalMaterial {
-            albedo: Vec3::new(0.8, 0.8, 0.8),
-            fuzz: 0.3
+        Material::Dielectric(DielectricMaterial {
+            refract_index: 1.5
+        }),
+    )));
+    world.add(Box::from(Sphere::new(
+        Vec3::new(-1., 0., -1.),
+        -0.45,
+        Material::Dielectric(DielectricMaterial {
+            refract_index: 1.5
         }),
     )));
 
@@ -132,7 +138,7 @@ pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
 pub fn color(ray: Ray, world: &HitableList, rng: &mut ThreadRng, depth: i32) -> Vec3 {
     match world.hit(&ray, 0.001, std::f32::MAX) {
         Option::Some(hit) => {
-            if depth < 50 {
+            if depth < 3 {
                 if let Option::Some(scatter) = hit.material.scatter(&ray, &hit, rng) {
                     let c = color(scatter.scattered, world, rng, depth);
                     Vec3::new(

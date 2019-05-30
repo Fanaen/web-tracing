@@ -2,11 +2,13 @@ use crate::intersections::{Hit, Ray};
 use crate::random_in_unit_sphere;
 use nalgebra_glm::{dot, Vec3};
 use rand::prelude::ThreadRng;
+use rand::Rng;
 
 #[derive(Clone)]
 pub enum Material {
     Lambert(LambertianMaterial),
     Metal(MetalMaterial),
+    Dielectric(DielectricMaterial),
 }
 
 pub trait MaterialTrait {
@@ -23,6 +25,7 @@ impl MaterialTrait for Material {
         match self {
             Material::Lambert(lambert) => lambert.scatter(ray, hit, rng),
             Material::Metal(metal) => metal.scatter(ray, hit, rng),
+            Material::Dielectric(dielectric) => dielectric.scatter(ray, hit, rng),
         }
     }
 }
@@ -76,3 +79,69 @@ impl MaterialTrait for MetalMaterial {
         }
     }
 }
+
+
+#[derive(Clone)]
+pub struct DielectricMaterial {
+    pub refract_index: f32,
+}
+
+pub fn refract(v: &Vec3, normal: &Vec3, ni_over_nt: f32) -> Option<Vec3> {
+    let uv: Vec3 = v.normalize();
+    let dt: f32 = dot(&uv, &normal);
+    let discriminant: f32 = 1.0 - ni_over_nt * ni_over_nt * (1. - dt * dt);
+    if discriminant > 0. {
+        Some(ni_over_nt * (uv - normal * dt) - normal * discriminant.sqrt())
+    }
+    else {
+        None
+    }
+}
+
+pub fn schlick(cosine: f32, refract_index: f32) -> f32 {
+    let mut r0: f32 = (1. - refract_index) / (1. + refract_index);
+    r0 = r0 * r0;
+    r0 + (1. - r0) * (1. - cosine).powf(5.)
+}
+
+impl MaterialTrait for DielectricMaterial {
+    fn scatter(&self, ray: &Ray, hit: &Hit, rng: &mut ThreadRng) -> Option<ScatterResult> {
+        let outward_normal: Vec3;
+        let ni_over_nt: f32;
+        let cosine: f32;
+
+        let scattered: Ray;
+
+        if dot(&ray.direction, &hit.normal) > 0. {
+            outward_normal = -hit.normal;
+            ni_over_nt = self.refract_index;
+            cosine = self.refract_index * dot(&ray.direction, &hit.normal) / ray.direction.magnitude();
+        }
+        else {
+            outward_normal = hit.normal;
+            ni_over_nt = 1. / self.refract_index;
+            cosine = - dot(&ray.direction, &hit.normal) / ray.direction.magnitude();
+        }
+
+        let refracted = refract(&ray.direction, &outward_normal, ni_over_nt);
+
+        if refracted.is_some() {
+            let reflect_prob = schlick(cosine, self.refract_index);
+            if rng.gen_range(0., 1.) < reflect_prob {
+                scattered = Ray { origin: hit.point, direction: reflect(&ray.direction, &hit.normal) };
+            }
+            else {
+                scattered = Ray { origin: hit.point, direction: refracted.unwrap() };
+            }
+        }
+        else {
+            scattered = Ray { origin: hit.point, direction: reflect(&ray.direction, &hit.normal) };
+        }
+
+        Some(ScatterResult {
+            attenuation: Vec3::new(1., 1., 1.),
+            scattered
+        })
+    }
+}
+

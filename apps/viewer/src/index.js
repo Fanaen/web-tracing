@@ -40,7 +40,8 @@ function realtimeUpdateCanvas() {
     setTimeout(() => realtimeUpdateCanvas(), 5000);
 }
 
-realtimeUpdateCanvas();
+// realtimeUpdateCanvas();
+updateCanvas();
 
 // -- UX --
 // Update button
