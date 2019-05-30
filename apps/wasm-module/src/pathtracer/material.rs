@@ -2,12 +2,12 @@ use crate::pathtracer::camera::{Hit, Ray};
 use crate::pathtracer::random_in_unit_sphere;
 use enum_dispatch::enum_dispatch;
 use nalgebra_glm::{dot, Vec3};
-use rand::prelude::ThreadRng;
+use rand::rngs::SmallRng;
 use rand::Rng;
 
 #[enum_dispatch(Material)]
 pub trait MaterialTrait {
-    fn scatter(&self, ray: &Ray, hit: &Hit, rng: &mut ThreadRng) -> Option<ScatterResult>;
+    fn scatter(&self, ray: &Ray, hit: &Hit, rng: &mut SmallRng) -> Option<ScatterResult>;
 }
 
 #[enum_dispatch]
@@ -29,7 +29,7 @@ pub struct LambertianMaterial {
 }
 
 impl MaterialTrait for LambertianMaterial {
-    fn scatter(&self, _ray: &Ray, hit: &Hit, rng: &mut ThreadRng) -> Option<ScatterResult> {
+    fn scatter(&self, _ray: &Ray, hit: &Hit, rng: &mut SmallRng) -> Option<ScatterResult> {
         let target: Vec3 = hit.point + hit.normal + random_in_unit_sphere(rng);
         let scattered = Ray {
             origin: hit.point,
@@ -54,7 +54,7 @@ fn reflect(v: &Vec3, normal: &Vec3) -> Vec3 {
 }
 
 impl MaterialTrait for MetalMaterial {
-    fn scatter(&self, ray: &Ray, hit: &Hit, rng: &mut ThreadRng) -> Option<ScatterResult> {
+    fn scatter(&self, ray: &Ray, hit: &Hit, rng: &mut SmallRng) -> Option<ScatterResult> {
         let reflected: Vec3 = reflect(&ray.direction.normalize(), &hit.normal);
         let scattered = Ray {
             origin: hit.point,
@@ -96,7 +96,7 @@ pub fn schlick(cosine: f32, refract_index: f32) -> f32 {
 }
 
 impl MaterialTrait for DielectricMaterial {
-    fn scatter(&self, ray: &Ray, hit: &Hit, rng: &mut ThreadRng) -> Option<ScatterResult> {
+    fn scatter(&self, ray: &Ray, hit: &Hit, rng: &mut SmallRng) -> Option<ScatterResult> {
         let outward_normal: Vec3;
         let ni_over_nt: f32;
         let cosine: f32;

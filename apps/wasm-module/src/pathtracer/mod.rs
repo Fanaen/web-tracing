@@ -4,15 +4,16 @@ use crate::pathtracer::material::{
 };
 use crate::pathtracer::sphere::Sphere;
 use nalgebra_glm::Vec3;
-use rand::prelude::ThreadRng;
 use rand::Rng;
+use rand::FromEntropy;
+use rand::rngs::SmallRng;
 
 pub mod camera;
 mod material;
 mod sphere;
 
 pub struct PathTracer {
-    rng: ThreadRng,
+    rng: SmallRng,
     camera: Camera,
     samples: i32,
     world: HitableList,
@@ -22,7 +23,7 @@ impl PathTracer {
     pub fn new(camera: Camera) -> PathTracer {
         PathTracer {
             camera,
-            rng: rand::thread_rng(),
+            rng: SmallRng::from_entropy(),
             samples: 16,
             world: HitableList::new(),
         }
@@ -124,7 +125,7 @@ impl PathTracer {
     }
 }
 
-pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
+pub fn random_in_unit_sphere(rng: &mut SmallRng) -> Vec3 {
     let mut p: Vec3 =
         2. * Vec3::new(
             rng.gen_range(0., 1.),
@@ -144,7 +145,7 @@ pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
     p
 }
 
-pub fn color(ray: Ray, world: &HitableList, rng: &mut ThreadRng, depth: i32) -> Vec3 {
+pub fn color(ray: Ray, world: &HitableList, rng: &mut SmallRng, depth: i32) -> Vec3 {
     match world.hit(&ray, 0.001, std::f32::MAX) {
         Option::Some(hit) => {
             if depth < 3 {
