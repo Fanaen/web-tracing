@@ -55,7 +55,7 @@ pub fn draw(
 
     let mut rng = rand::thread_rng();
 
-    let samples = 100;
+    let samples = 16;
     for y in (0..height).rev() {
         for x in 0..width {
             let mut col = Vec3::new(0., 0., 0.);

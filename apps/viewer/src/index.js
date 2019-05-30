@@ -24,7 +24,11 @@ function updateCanvas() {
         const cameraRotation = wasm.Vector3.new(camera.rotation.data.x, camera.rotation.data.y, camera.rotation.data.z);
         console.log(camera.position.data);
         console.log(camera.rotation.data);
+
+        const before = performance.now();
         wasm.draw(ctx, 320, 160, cameraPos, cameraRotation, camera.camera.camera.fov);
+        const after = performance.now();
+        console.log(`Draw in ${(after - before).toFixed(3)}ms`);
     }
 }
 
