@@ -1,14 +1,20 @@
 use crate::intersections::{Hit, Hitable, Ray};
+use crate::material::Material;
 use nalgebra_glm::{dot, Vec3};
 
 pub struct Sphere {
     center: Vec3,
     radius: f32,
+    material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32) -> Sphere {
-        Sphere { center, radius }
+    pub fn new(center: Vec3, radius: f32, material: Material) -> Sphere {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -30,6 +36,7 @@ impl Hitable for Sphere {
                     t: temp,
                     point,
                     normal: ((point - self.center) / self.radius).normalize(),
+                    material: self.material.clone(),
                 });
             }
 
@@ -40,6 +47,7 @@ impl Hitable for Sphere {
                     t: temp,
                     point,
                     normal: ((point - self.center) / self.radius).normalize(),
+                    material: self.material.clone(),
                 });
             }
         }

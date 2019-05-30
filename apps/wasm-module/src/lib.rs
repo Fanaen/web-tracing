@@ -1,17 +1,20 @@
 mod camera;
 pub mod intersections;
+mod material;
 mod sphere;
 mod utils;
 
 use crate::camera::Camera;
 use crate::intersections::{ConvertibleVec3, Hitable, HitableList, Ray, Vector3};
+use crate::material::Material::Lambert;
+use crate::material::{Material, MaterialTrait, MetalMaterial, LambertianMaterial};
 use crate::sphere::Sphere;
 use nalgebra_glm::Vec3;
+use rand::prelude::ThreadRng;
 use rand::Rng;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
-use rand::prelude::ThreadRng;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -50,8 +53,34 @@ pub fn draw(
     let mut data = Vec::with_capacity(dataSize);
 
     let mut world = HitableList::new();
-    world.add(Box::from(Sphere::new(Vec3::new(0., 0., -1.), 0.5)));
-    world.add(Box::from(Sphere::new(Vec3::new(0., -100.5, -1.), 100.)));
+    world.add(Box::from(Sphere::new(
+        Vec3::new(0., 0., -1.),
+        0.5,
+        Material::Lambert(LambertianMaterial {
+            albedo: Vec3::new(0.8, 0.3, 0.3),
+        }),
+    )));
+    world.add(Box::from(Sphere::new(
+        Vec3::new(0., -100.5, -1.),
+        100.,
+        Material::Lambert(LambertianMaterial {
+            albedo: Vec3::new(0.8, 0.8, 0.),
+        }),
+    )));
+    world.add(Box::from(Sphere::new(
+        Vec3::new(1., 0., -1.),
+        0.5,
+        Material::Metal(MetalMaterial {
+            albedo: Vec3::new(0.8, 0.6, 0.2),
+        }),
+    )));
+    world.add(Box::from(Sphere::new(
+        Vec3::new(-1., 0., -1.),
+        0.5,
+        Material::Metal(MetalMaterial {
+            albedo: Vec3::new(0.8, 0.8, 0.8),
+        }),
+    )));
 
     let mut rng = rand::thread_rng();
 
@@ -63,7 +92,7 @@ pub fn draw(
                 let u = (x as f32 + rng.gen_range(0., 1.)) / width as f32;
                 let v = (y as f32 + rng.gen_range(0., 1.)) / height as f32;
                 let ray = camera.get_ray(u, v);
-                col = col + color(ray, &world, &mut rng);
+                col = col + color(ray, &world, &mut rng, 0);
             }
 
             col = col / samples as f32;
@@ -98,16 +127,23 @@ pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
     p
 }
 
-pub fn color(ray: Ray, world: &HitableList, rng: &mut ThreadRng) -> Vec3 {
-    match world.hit(&ray, 0., std::f32::MAX) {
+pub fn color(ray: Ray, world: &HitableList, rng: &mut ThreadRng, depth: i32) -> Vec3 {
+    match world.hit(&ray, 0.001, std::f32::MAX) {
         Option::Some(hit) => {
-            let target = hit.point.clone() + hit.normal + random_in_unit_sphere(rng);
-            let diffuseRay = Ray {
-                origin: hit.point,
-                direction: target - hit.point,
-            };
-
-            0.5 * color(diffuseRay, world, rng)
+            if depth < 50 {
+                if let Option::Some(scatter) = hit.material.scatter(&ray, &hit, rng) {
+                    let c = color(scatter.scattered, world, rng, depth);
+                    Vec3::new(
+                        scatter.attenuation.x * c.x,
+                        scatter.attenuation.y * c.y,
+                        scatter.attenuation.z * c.z,
+                    )
+                } else {
+                    Vec3::new(0., 0., 0.)
+                }
+            } else {
+                Vec3::new(0., 0., 0.)
+            }
         }
         Option::None => {
             // On affiche le fond sinon

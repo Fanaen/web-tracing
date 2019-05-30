@@ -1,3 +1,4 @@
+use crate::material::Material;
 use nalgebra_glm::Vec3;
 use wasm_bindgen::prelude::*;
 
@@ -50,6 +51,7 @@ pub struct Hit {
     pub t: f32,
     pub point: Vec3,
     pub normal: Vec3,
+    pub material: Material,
 }
 
 pub trait Hitable {
