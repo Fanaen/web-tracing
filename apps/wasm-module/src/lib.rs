@@ -67,9 +67,9 @@ pub fn draw(
             }
 
             col = col / samples as f32;
-            data.push((255.99 * col.x) as u8);
-            data.push((255.99 * col.y) as u8);
-            data.push((255.99 * col.z) as u8);
+            data.push((255.99 * col.x.sqrt()) as u8);
+            data.push((255.99 * col.y.sqrt()) as u8);
+            data.push((255.99 * col.z.sqrt()) as u8);
             data.push(255);
         }
     }
