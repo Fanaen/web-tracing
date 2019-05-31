@@ -148,9 +148,9 @@ pub fn random_in_unit_sphere(rng: &mut SmallRng) -> Vec3 {
 pub fn color(ray: Ray, world: &HitableList, rng: &mut SmallRng, depth: i32) -> Vec3 {
     match world.hit(&ray, 0.001, std::f32::MAX) {
         Option::Some(hit) => {
-            if depth < 3 {
+            if depth < 50 {
                 if let Option::Some(scatter) = hit.material.scatter(&ray, &hit, rng) {
-                    let c = color(scatter.scattered, world, rng, depth);
+                    let c = color(scatter.scattered, world, rng, depth + 1);
                     Vec3::new(
                         scatter.attenuation.x * c.x,
                         scatter.attenuation.y * c.y,
