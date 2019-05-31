@@ -1,4 +1,4 @@
-import * as wasm from '../../wasm-module/pkg/web_tracing';
+import * as wasm from './wasm-module';
 
 // Update the canvas
 const canvas = document.getElementById('web-tracing-canvas');
@@ -20,15 +20,10 @@ function updateCanvas() {
     if (ctx) {
         const camera = document.getElementById('main-camera').components;
         console.log(camera);
-        const cameraPos = wasm.Vector3.new(camera.position.data.x, camera.position.data.y, camera.position.data.z);
-        const cameraRotation = wasm.Vector3.new(camera.rotation.data.x, camera.rotation.data.y, camera.rotation.data.z);
         console.log(camera.position.data);
         console.log(camera.rotation.data);
 
-        const before = performance.now();
-        wasm.draw(ctx, 320, 160, cameraPos, cameraRotation, camera.camera.camera.fov);
-        const after = performance.now();
-        console.log(`Draw in ${(after - before).toFixed(3)}ms`);
+        wasm.draw(ctx, 320, 160, camera.position.data, camera.rotation.data, camera.camera.camera.fov);
     }
 }
 
