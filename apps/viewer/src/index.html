@@ -9,7 +9,14 @@
 <body>
 
   <div class="web-tracing">
-    <div class="card" id="web-tracing-display"><canvas id="web-tracing-canvas" width="320px" height="160px"></canvas></div>
+    <div class="data">
+      <div id="web-tracing-display">
+        <div class="loading-overlay"><div class="loader"></div></div>
+        <canvas id="web-tracing-canvas" width="320px" height="160px"></canvas>
+      </div>
+      <p id="draw-in"></p>
+      <p id="applied-in"></p>
+    </div>
     <div class="actions">
       <i class="btn fas fa-minus" id="close-web-tracing"></i>
       <i class="btn fas fa-play" id="draw-web-tracing"></i>
