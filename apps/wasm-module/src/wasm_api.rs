@@ -3,18 +3,15 @@ use crate::pathtracer::PathTracer;
 use crate::utils::set_panic_hook;
 use nalgebra_glm::Vec3;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::Clamped;
-use web_sys::{CanvasRenderingContext2d, ImageData};
 
 #[wasm_bindgen]
 pub fn draw(
-    ctx: &CanvasRenderingContext2d,
     width: u32,
     height: u32,
     camera_pos: Vector3,
     camera_rotation: Vector3,
     camera_fov: f32,
-) -> Result<(), JsValue> {
+) -> Result<Vec<u8>, JsValue> {
     set_panic_hook();
 
     let camera = Camera::new(
@@ -43,8 +40,7 @@ pub fn draw(
         }
     }
 
-    let data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut data), width, height)?;
-    ctx.put_image_data(&data, 0.0, 0.0)
+    Ok(data)
 }
 
 /// Wraps around the Vec3 struct from nalgebra for wasm-bindgen

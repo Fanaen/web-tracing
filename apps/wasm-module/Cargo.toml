@@ -34,7 +34,6 @@ wee_alloc = { version = "0.4.2", optional = true }
 # 1. Features
 nalgebra-glm = "0.3"
 rand = { version = "0.6.5", features = ['wasm-bindgen'] }
-web-sys = { version = "0.3.22", features = ['ImageData', 'CanvasRenderingContext2d'] }
 
 # 1. Optimisation
 enum_dispatch = "0.1.3"
