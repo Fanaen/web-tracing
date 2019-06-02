@@ -23,7 +23,7 @@ function updateCanvas() {
         console.log(camera.position.data);
         console.log(camera.rotation.data);
 
-        wasm.draw(ctx, 320, 160, camera.position.data, camera.rotation.data, camera.camera.camera.fov);
+        wasm.draw(ctx, 16, 320, 160, camera.position.data, camera.rotation.data, camera.camera.camera.fov);
     }
 }
 
