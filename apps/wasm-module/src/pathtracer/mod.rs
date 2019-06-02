@@ -5,8 +5,8 @@ use crate::pathtracer::material::{
 use crate::pathtracer::sphere::Sphere;
 use nalgebra_glm::Vec3;
 use rand::Rng;
-use rand::FromEntropy;
 use rand::rngs::SmallRng;
+use rand_core::SeedableRng;
 
 pub mod camera;
 mod material;
@@ -23,7 +23,7 @@ impl PathTracer {
     pub fn new(camera: Camera) -> PathTracer {
         PathTracer {
             camera,
-            rng: SmallRng::from_entropy(),
+            rng: SmallRng::seed_from_u64(0),
             samples: 16,
             world: HitableList::new(),
         }
