@@ -10,7 +10,7 @@ import('../../wasm-module/pkg').then(wasm => {
 
     function onMessageReceived(e) {
         try {
-            const call = JSON.parse(e.data);
+            const call = e.data;
             switch (call.type) {
                 case 'draw':
                     const before = performance.now();

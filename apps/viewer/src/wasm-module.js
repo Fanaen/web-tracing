@@ -29,6 +29,10 @@ class WorkerPool {
         }
     }
 
+    clear() {
+        this.queuedJobs = [];
+    }
+
     getIdleWorker() {
         for (const worker of this.workers) {
             if (!worker.isWorking) {
@@ -93,7 +97,7 @@ class WebTracingWorker {
         performance.mark('tile-#' + id);
 
         if (useWasm) {
-            this.worker.postMessage(JSON.stringify(data));
+            this.worker.postMessage(data);
         } else {
             // Call the server
             setLoading(true);
@@ -158,6 +162,8 @@ class WebTracingWorker {
 const workerPool = new WorkerPool(nbWorkers);
 
 export function draw(ctx, tile_size, width, height) {
+    workerPool.clear();
+
     for (let tile_y = 0; tile_y < height; tile_y += tile_size) {
         for (let tile_x = 0; tile_x < width; tile_x += tile_size) {
             const job = {
