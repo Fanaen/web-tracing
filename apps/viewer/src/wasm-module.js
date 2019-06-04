@@ -67,6 +67,8 @@ class WebTracingWorker {
         this.parent = pool;
         this.currentJob = undefined;
         this.isWorking = false;
+        this.lastTileTime = null;
+        this.lastTileBeginTime = null;
     }
 
     beginJob(id, data, ctx) {
@@ -77,8 +79,10 @@ class WebTracingWorker {
         this.currentJob = data;
         this.ctx = ctx;
 
+        performance.mark('tile-#' + id);
+
         if (useWasm) {
-            this.worker.postMessage(data);
+            this.worker.postMessage(JSON.stringify(data));
         } else {
             // Call the server
             setLoading(true);
@@ -108,17 +112,27 @@ class WebTracingWorker {
     }
 
     onMessage(e) {
-        // End of the drawing pipe, when using WASM
-        logDrawIn(`Drawed in ${e.data.time}ms`);
-        const job = this.currentJob;
+        if (e.data.byteLength) {
+            // MESSAGE 1: tile octets
+            // End of the drawing pipe, when using WASM
+            const job = this.currentJob;
 
-        const imageData = new ImageData(e.data.image, job.tile_size, job.tile_size);
-        this.ctx.putImageData(imageData, job.tile_x, job.height - job.tile_size - job.tile_y, 0, 0, job.tile_size, job.tile_size);
-        const after = performance.now();
-        setLoading(false);
-        logAppliedIn(`Transfered and applied to canvas in ${(after - e.data.timestamp).toFixed(3)}ms`);
+            const imageData = new ImageData(new Uint8ClampedArray(e.data), job.tile_size, job.tile_size);
+            this.ctx.putImageData(imageData, job.tile_x, job.height - job.tile_size - job.tile_y, 0, 0, job.tile_size, job.tile_size);
 
-        this.returnToIdle();
+            const perfEntryName = 'tile-#' + job.id;
+            performance.measure(perfEntryName, perfEntryName);
+        } else {
+            // MESSAGE 2: metadata
+            logDrawIn(`Drawed in ${e.data.duration}ms`);
+
+            const perfEntryName = 'tile-#' + this.currentJob.id;
+            const totalDuration = performance.getEntriesByName(perfEntryName)[1].duration;
+            logAppliedIn(`Transfered and applied to canvas in ${totalDuration - e.data.duration}ms`);
+            setLoading(false);
+
+            this.returnToIdle();
+        }
     };
 
     returnToIdle() {
