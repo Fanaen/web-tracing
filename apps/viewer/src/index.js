@@ -18,12 +18,15 @@ window.onblur = function() {
 
 function updateCanvas() {
     if (ctx) {
-        const camera = document.getElementById('main-camera').components;
-        console.log(camera);
-        console.log(camera.position.data);
-        console.log(camera.rotation.data);
+        const cameraEntity = document.getElementById('main-camera');
+        const components = cameraEntity.components;
+        const worldCameraObject = cameraEntity.object3D;
+        const camera = components.camera.camera;
+        const fov = camera.fov;
+        const cameraPos = worldCameraObject.position;
+        const cameraRotation = worldCameraObject.rotation.toVector3();
 
-        wasm.draw(ctx, 16, 320, 160, camera.position.data, camera.rotation.data, camera.camera.camera.fov);
+        wasm.draw(ctx, 16, 320, 160, cameraPos, cameraRotation, fov);
     }
 }
 
@@ -32,10 +35,10 @@ function realtimeUpdateCanvas() {
     {
         updateCanvas();
     }
-    setTimeout(() => realtimeUpdateCanvas(), 5000);
+    setTimeout(() => realtimeUpdateCanvas(), 1000);
 }
 
-// realtimeUpdateCanvas();
+//realtimeUpdateCanvas();
 updateCanvas();
 
 // -- UX --

@@ -27,9 +27,9 @@ impl Camera {
         let axis_z = Vec3::new(0.0, 0.0, 1.0);
 
         let deg_to_radians = pi::<f32>() / 180.0;
-        camera_front = rotate_vec3(&camera_front, deg_to_radians * camera_rotation.x, &axis_x);
-        camera_front = rotate_vec3(&camera_front, deg_to_radians * camera_rotation.y, &axis_y);
-        camera_front = rotate_vec3(&camera_front, deg_to_radians * camera_rotation.z, &axis_z);
+        camera_front = rotate_vec3(&camera_front, camera_rotation.x, &axis_x);
+        camera_front = rotate_vec3(&camera_front, camera_rotation.y, &axis_y);
+        camera_front = rotate_vec3(&camera_front, camera_rotation.z, &axis_z);
         camera_front = camera_front.normalize();
 
         let camera_center = camera_pos + camera_front;
@@ -37,7 +37,6 @@ impl Camera {
         let camera_up = camera_right.cross(&camera_front).normalize();
 
         let aspect = (width as f32) / (height as f32);
-        //console::log(&camera_fov.into());
         let camera_fov = camera_fov * deg_to_radians;
         let projection_matrix = Mat4::new_perspective(aspect, camera_fov, 0.1, 10000.0);
         let view_matrix = look_at(&camera_pos, &camera_center, &camera_up);
