@@ -1,13 +1,16 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-#[macro_use] extern crate rocket;
-#[macro_use] extern crate rocket_contrib;
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate rocket;
+#[macro_use]
+extern crate rocket_contrib;
+#[macro_use]
+extern crate serde_derive;
+use nalgebra_glm::Vec3;
+use rocket_contrib::json::{Json, JsonValue};
 use rocket_cors;
 use rocket_cors::Error;
-use rocket_contrib::json::{Json, JsonValue};
 use std::time::Instant;
-use nalgebra_glm::Vec3;
 use web_tracing::pathtracer::camera::Camera;
 use web_tracing::pathtracer::PathTracer;
 
@@ -23,7 +26,6 @@ impl Into<Vec3> for Vector3 {
         Vec3::new(self.x, self.y, self.z)
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 struct DrawCall {
@@ -78,10 +80,11 @@ fn draw(msg: Json<DrawCall>) -> JsonValue {
     })
 }
 
-fn main() -> Result<(), Error>  {
+fn main() -> Result<(), Error> {
     let cors = rocket_cors::CorsOptions {
         ..Default::default()
-    }.to_cors()?;
+    }
+    .to_cors()?;
 
     rocket::ignite()
         .mount("/", routes![draw])

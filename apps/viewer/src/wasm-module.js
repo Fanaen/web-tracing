@@ -57,6 +57,12 @@ class WorkerPool {
             worker = this.getIdleWorker();
         }
     }
+
+    sendToEveryone(data) {
+        for (const worker of this.workers) {
+            worker.sendMessage(data);
+        }
+    }
 }
 
 class WebTracingWorker {
@@ -69,6 +75,11 @@ class WebTracingWorker {
         this.isWorking = false;
         this.lastTileTime = null;
         this.lastTileBeginTime = null;
+    }
+
+    sendMessage(data)
+    {
+        this.worker.postMessage(data);
     }
 
     beginJob(id, data, ctx) {
@@ -146,7 +157,7 @@ class WebTracingWorker {
 
 const workerPool = new WorkerPool(nbWorkers);
 
-const draw = (ctx, tile_size, width, height, camera_pos, camera_rotation, camera_fov) => {
+export function draw(ctx, tile_size, width, height) {
     for (let tile_y = 0; tile_y < height; tile_y += tile_size) {
         for (let tile_x = 0; tile_x < width; tile_x += tile_size) {
             const job = {
@@ -155,17 +166,33 @@ const draw = (ctx, tile_size, width, height, camera_pos, camera_rotation, camera
                 tile_y,
                 tile_size,
                 width,
-                height,
-                camera_pos,
-                camera_rotation,
-                camera_fov,
+                height
             };
 
             workerPool.beginJob(job, ctx);
         }
     }
-};
+}
 
-export {
-    draw
+export function setCamera(cameraEntity) {
+    const components = cameraEntity.components;
+    const worldCameraObject = cameraEntity.object3D;
+    const camera = components.camera.camera;
+    const position = worldCameraObject.position;
+    const rotation = worldCameraObject.rotation.toVector3();
+    const fov = camera.fov;
+
+    const message = {
+        type: 'set_camera',
+        position,
+        rotation,
+        fov
+    };
+
+    workerPool.sendToEveryone(message);
+}
+
+export function setRenderingSettings(settings) {
+    settings.type = 'set_rendering_settings';
+    workerPool.sendToEveryone(settings);
 }

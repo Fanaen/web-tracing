@@ -4,8 +4,8 @@ use crate::pathtracer::material::{
 };
 use crate::pathtracer::sphere::Sphere;
 use nalgebra_glm::Vec3;
-use rand::Rng;
 use rand::rngs::SmallRng;
+use rand::Rng;
 use rand_core::SeedableRng;
 
 pub mod camera;
@@ -15,16 +15,16 @@ mod sphere;
 pub struct PathTracer {
     rng: SmallRng,
     camera: Camera,
-    samples: i32,
+    samples: u16,
     world: HitableList,
 }
 
 impl PathTracer {
-    pub fn new(camera: Camera) -> PathTracer {
+    pub fn new(camera: Camera, samples: u16) -> PathTracer {
         PathTracer {
             camera,
             rng: SmallRng::seed_from_u64(0),
-            samples: 16,
+            samples,
             world: HitableList::new(),
         }
     }
@@ -90,11 +90,11 @@ impl PathTracer {
                             .into(),
                         )));
                     } else {
-//                        self.world.add(Box::from(Sphere::new(
-//                            center,
-//                            0.2,
-//                            DielectricMaterial { refract_index: 1.5 }.into(),
-//                        )));
+                        //                        self.world.add(Box::from(Sphere::new(
+                        //                            center,
+                        //                            0.2,
+                        //                            DielectricMaterial { refract_index: 1.5 }.into(),
+                        //                        )));
                     }
                 }
             }
@@ -117,11 +117,11 @@ impl PathTracer {
             }
             .into(),
         )));
-//        self.world.add(Box::from(Sphere::new(
-//            Vec3::new(0., 1., 0.),
-//            1.,
-//            DielectricMaterial { refract_index: 1.5 }.into(),
-//        )));
+        //        self.world.add(Box::from(Sphere::new(
+        //            Vec3::new(0., 1., 0.),
+        //            1.,
+        //            DielectricMaterial { refract_index: 1.5 }.into(),
+        //        )));
     }
 }
 
@@ -148,7 +148,7 @@ pub fn random_in_unit_sphere(rng: &mut SmallRng) -> Vec3 {
 pub fn color(ray: Ray, world: &HitableList, rng: &mut SmallRng, depth: i32) -> Vec3 {
     match world.hit(&ray, 0.001, std::f32::MAX) {
         Option::Some(hit) => {
-            if depth < 50 {
+            if depth < 10 {
                 if let Option::Some(scatter) = hit.material.scatter(&ray, &hit, rng) {
                     let c = color(scatter.scattered, world, rng, depth + 1);
                     Vec3::new(

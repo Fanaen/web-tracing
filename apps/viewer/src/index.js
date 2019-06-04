@@ -18,15 +18,12 @@ window.onblur = function() {
 
 function updateCanvas() {
     if (ctx) {
+        wasm.setRenderingSettings({
+            sample_per_pixel: 4
+        });
         const cameraEntity = document.getElementById('main-camera');
-        const components = cameraEntity.components;
-        const worldCameraObject = cameraEntity.object3D;
-        const camera = components.camera.camera;
-        const fov = camera.fov;
-        const cameraPos = worldCameraObject.position;
-        const cameraRotation = worldCameraObject.rotation.toVector3();
-
-        wasm.draw(ctx, 16, 320, 160, cameraPos, cameraRotation, fov);
+        wasm.setCamera(cameraEntity);
+        wasm.draw(ctx, 16, 320, 160);
     }
 }
 

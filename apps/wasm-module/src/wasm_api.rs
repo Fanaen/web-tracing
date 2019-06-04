@@ -5,50 +5,66 @@ use nalgebra_glm::Vec3;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub fn draw(
-    tile_x: u32,
-    tile_y: u32,
-    tile_size: u32,
-    width: u32,
-    height: u32,
-    camera_pos: Vector3,
-    camera_rotation: Vector3,
-    camera_fov: f32,
-) -> Result<Vec<u8>, JsValue> {
-    set_panic_hook();
+pub struct Context {
+    pub camera_pos: Vector3,
+    pub camera_rotation: Vector3,
+    pub camera_fov: f32,
+    pub sample_per_pixel: u16,
+}
 
-    let camera = Camera::new(
-        camera_pos.into(),
-        camera_rotation.into(),
-        camera_fov,
-        width,
-        height,
-    );
-
-    let mut pathtracer = PathTracer::new(camera);
-
-    pathtracer.random_spheres();
-
-    // Call the pathtracer once per pixel and build the image
-    let data_size = (tile_size * tile_size) as usize;
-    let mut data = Vec::with_capacity(data_size);
-
-    for y in (tile_y..(tile_y + tile_size)).rev() {
-        for x in tile_x..(tile_x + tile_size) {
-            let col = pathtracer.compute_pixel(x, y);
-            data.push((255.99 * col.x.sqrt()) as u8);
-            data.push((255.99 * col.y.sqrt()) as u8);
-            data.push((255.99 * col.z.sqrt()) as u8);
-            data.push(255);
+#[wasm_bindgen]
+impl Context {
+    pub fn new() -> Context {
+        set_panic_hook();
+        Context {
+            camera_pos: Vector3::new(0.0, 0.0, 0.0),
+            camera_rotation: Vector3::new(0.0, 0.0, 0.0),
+            camera_fov: 0.0,
+            sample_per_pixel: 1,
         }
     }
 
-    Ok(data)
+    pub fn draw(
+        &mut self,
+        tile_x: u32,
+        tile_y: u32,
+        tile_size: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<Vec<u8>, JsValue> {
+        let camera = Camera::new(
+            self.camera_pos.into(),
+            self.camera_rotation.into(),
+            self.camera_fov,
+            width,
+            height,
+        );
+
+        let mut pathtracer = PathTracer::new(camera, self.sample_per_pixel);
+
+        pathtracer.random_spheres();
+
+        // Call the pathtracer once per pixel and build the image
+        let data_size = (tile_size * tile_size) as usize;
+        let mut data = Vec::with_capacity(data_size);
+
+        for y in (tile_y..(tile_y + tile_size)).rev() {
+            for x in tile_x..(tile_x + tile_size) {
+                let col = pathtracer.compute_pixel(x, y);
+                data.push((255.99 * col.x.sqrt()) as u8);
+                data.push((255.99 * col.y.sqrt()) as u8);
+                data.push((255.99 * col.z.sqrt()) as u8);
+                data.push(255);
+            }
+        }
+
+        Ok(data)
+    }
 }
 
 /// Wraps around the Vec3 struct from nalgebra for wasm-bindgen
 #[wasm_bindgen]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Vector3 {
     pub x: f32,
     pub y: f32,
