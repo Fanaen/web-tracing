@@ -9,3 +9,4 @@ wasm-pack.log
 yarn-error.log
 
 .idea/
+private/

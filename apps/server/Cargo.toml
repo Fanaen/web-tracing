@@ -19,3 +19,6 @@ nalgebra-glm = "0.3"
 version = "0.4.1"
 default-features = false
 features = ["json"]
+
+[profile.release]
+debug = true
