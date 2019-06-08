@@ -1,4 +1,4 @@
-const nbWorkers = 4;
+const nbWorkers = 7;
 
 let frameId = 0;
 
