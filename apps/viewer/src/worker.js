@@ -23,7 +23,7 @@ import('../../wasm-module/pkg').then(wasm => {
                     const after = performance.now();
 
                     postMessage(image.buffer, [image.buffer]);
-                    postMessage({ duration: after - before });
+                    postMessage({ duration: (after - before).toFixed(1) });
                     break;
 
                 case 'set_camera':

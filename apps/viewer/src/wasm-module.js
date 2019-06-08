@@ -1,5 +1,11 @@
 const nbWorkers = 4;
 
+let frameId = 0;
+
+// Stats stuff
+let nbRays = 0;
+let samplePerPixel = 1;
+
 // UX stuff
 function logDrawIn(str) {
     document.getElementById('draw-in').innerText = str;
@@ -56,6 +62,18 @@ class WorkerPool {
 
             worker = this.getIdleWorker();
         }
+
+        if (this.queuedJobs.length === 0) {
+            // Frame complete, log the stats
+            const perfEntryName = 'frame-#' + frameId;
+            performance.measure(perfEntryName, perfEntryName);
+            const frameTime = performance.getEntriesByName(perfEntryName)[1].duration;
+            const frameTimeWithUnit = frameTime > 1000 ?
+                (frameTime / 1000).toFixed(1) + 's' : frameTime.toFixed(1) + 'ms';
+
+            logDrawIn(`Frame drawed in ${frameTimeWithUnit}`);
+            logAppliedIn(`${Math.floor(nbRays / (frameTime / 1000)) } ray/s`)
+        }
     }
 
     sendToEveryone(data) {
@@ -110,7 +128,8 @@ class WebTracingWorker {
 
             const perfEntryName = 'tile-#' + this.currentJob.id;
             const totalDuration = performance.getEntriesByName(perfEntryName)[1].duration;
-            logAppliedIn(`Transfered and applied to canvas in ${totalDuration - e.data.duration}ms`);
+            logAppliedIn(`Transfered and applied to canvas in ${(totalDuration - e.data.duration).toFixed(1)}ms`);
+
             setLoading(false);
 
             this.returnToIdle();
@@ -120,7 +139,6 @@ class WebTracingWorker {
     returnToIdle() {
         this.isWorking = false;
         this.currentJob = undefined;
-        this.currentJobId = undefined;
         this.ctx = undefined;
         this.parent.startNextJob();
     }
@@ -131,6 +149,13 @@ const workerPool = new WorkerPool(nbWorkers);
 export function draw(ctx, tile_size, width, height) {
     workerPool.clear();
 
+    // Stats stuff
+    frameId++;
+    performance.mark('frame-#' + frameId);
+
+    nbRays = width * height * samplePerPixel;
+
+    // Prepare the jobs
     for (let tile_y = 0; tile_y < height; tile_y += tile_size) {
         for (let tile_x = 0; tile_x < width; tile_x += tile_size) {
             const job = {
@@ -167,5 +192,10 @@ export function setCamera(cameraEntity) {
 
 export function setRenderingSettings(settings) {
     settings.type = 'set_rendering_settings';
+
+    if(settings.sample_per_pixel) {
+        samplePerPixel = settings.sample_per_pixel;
+    }
+
     workerPool.sendToEveryone(settings);
 }
