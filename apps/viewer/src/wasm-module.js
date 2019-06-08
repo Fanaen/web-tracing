@@ -1,8 +1,4 @@
-import axios from 'axios';
-
-const useWasm = true;
 const nbWorkers = 4;
-const serverUrl = 'http://localhost:8000';
 
 // UX stuff
 function logDrawIn(str) {
@@ -77,8 +73,6 @@ class WebTracingWorker {
         this.parent = pool;
         this.currentJob = undefined;
         this.isWorking = false;
-        this.lastTileTime = null;
-        this.lastTileBeginTime = null;
     }
 
     sendMessage(data)
@@ -96,34 +90,7 @@ class WebTracingWorker {
 
         performance.mark('tile-#' + id);
 
-        if (useWasm) {
-            this.worker.postMessage(data);
-        } else {
-            // Call the server
-            setLoading(true);
-            axios
-                .post(`${serverUrl}/draw`, data, { headers: { 'Access-Control-Allow-Origin': '*' } })
-                .then(response => {
-                    // End of the drawing pipe, when using server
-                    logDrawIn(`Drawed in ${response.data.time}`);
-
-                    const before = performance.now();
-                    const imageData = ctx.createImageData(data.tile_size, data.tile_size);
-                    const image = response.data.image;
-
-                    for (let i = 0; i< image.length; i++) {
-                        imageData.data[i] = image[i];
-                    }
-
-                    ctx.putImageData(imageData, data.tile_x, data.height - data.tile_size - data.tile_y, 0, 0, data.tile_size, data.tile_size);
-                    const after = performance.now();
-                    setLoading(false);
-                    logAppliedIn(`Applied to canvas in ${(after - before).toFixed(3)}ms`);
-
-                    this.returnToIdle();
-                })
-                .catch(error => console.error('Error when calling draw:', error)); // Print the error if one occurred;
-        }
+        this.worker.postMessage(data);
     }
 
     onMessage(e) {
