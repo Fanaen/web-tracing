@@ -43,14 +43,14 @@ impl PathTracer {
 
     pub fn random_spheres(&mut self) {
         // Le sol
-        self.world.add(Box::from(Sphere::new(
+        self.world.add(Sphere::new(
             Vec3::new(0., -1000., 0.),
             1000.,
             LambertianMaterial {
                 albedo: Vec3::new(0.5, 0.5, 0.5),
             }
             .into(),
-        )));
+        ).into());
 
         for a in -11..11 {
             for b in -11..11 {
@@ -63,7 +63,7 @@ impl PathTracer {
 
                 if (center - Vec3::new(4., 0.2, 0.)).magnitude() > 0.9 {
                     if choose_mat < 0.8 {
-                        self.world.add(Box::from(Sphere::new(
+                        self.world.add(Sphere::new(
                             center,
                             0.2,
                             LambertianMaterial {
@@ -74,9 +74,9 @@ impl PathTracer {
                                 ),
                             }
                             .into(),
-                        )));
+                        ).into());
                     } else if choose_mat < 1. {
-                        self.world.add(Box::from(Sphere::new(
+                        self.world.add(Sphere::new(
                             center,
                             0.2,
                             MetalMaterial {
@@ -88,27 +88,27 @@ impl PathTracer {
                                 fuzz: 0.5 * self.rng.gen_range(0., 1.),
                             }
                             .into(),
-                        )));
+                        ).into());
                     } else {
-                        self.world.add(Box::from(Sphere::new(
+                        self.world.add(Sphere::new(
                             center,
                             0.2,
                             DielectricMaterial { refract_index: 1.5 }.into(),
-                        )));
+                        ).into());
                     }
                 }
             }
         }
 
-        self.world.add(Box::from(Sphere::new(
+        self.world.add(Sphere::new(
             Vec3::new(-4., 1., 0.),
             1.,
             LambertianMaterial {
                 albedo: Vec3::new(0.4, 0.2, 0.1),
             }
             .into(),
-        )));
-        self.world.add(Box::from(Sphere::new(
+        ).into());
+        self.world.add(Sphere::new(
             Vec3::new(4., 1., 0.),
             1.,
             MetalMaterial {
@@ -116,12 +116,12 @@ impl PathTracer {
                 fuzz: 0.,
             }
             .into(),
-        )));
-        self.world.add(Box::from(Sphere::new(
+        ).into());
+        self.world.add(Sphere::new(
             Vec3::new(0., 2., 0.),
             1.,
             DielectricMaterial { refract_index: 1.5 }.into(),
-        )));
+        ).into());
     }
 }
 

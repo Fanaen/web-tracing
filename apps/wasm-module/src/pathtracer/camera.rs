@@ -1,5 +1,7 @@
 use crate::pathtracer::material::Material;
+use crate::pathtracer::sphere::Sphere;
 use nalgebra_glm::{inverse, look_at, pi, rotate_vec3, vec4_to_vec3, Mat4, Vec3, Vec4};
+use enum_dispatch::enum_dispatch;
 
 pub struct Camera {
     pub origin: Vec3,
@@ -96,22 +98,28 @@ pub struct Hit {
     pub material: Material,
 }
 
+#[enum_dispatch]
+pub enum HitableShape {
+    Sphere
+}
+
+#[enum_dispatch(HitableShape)]
 pub trait Hitable {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<Hit>;
 }
 
 pub struct HitableList {
-    list: Vec<Box<Hitable>>,
+    list: Vec<HitableShape>,
 }
 
 impl HitableList {
     pub fn new() -> HitableList {
         HitableList {
-            list: Vec::<Box<Hitable>>::new(),
+            list: Vec::<HitableShape>::new(),
         }
     }
 
-    pub fn add(&mut self, hitable: Box<Hitable>) {
+    pub fn add(&mut self, hitable: HitableShape) {
         self.list.push(hitable);
     }
 }
