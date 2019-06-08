@@ -1,7 +1,7 @@
 use crate::pathtracer::camera::{Hit, Ray};
 use crate::pathtracer::random_in_unit_sphere;
 use enum_dispatch::enum_dispatch;
-use nalgebra_glm::{dot, Vec3};
+use nalgebra_glm::Vec3;
 use rand::rngs::SmallRng;
 use rand::Rng;
 
@@ -50,7 +50,7 @@ pub struct MetalMaterial {
 }
 
 fn reflect(v: &Vec3, normal: &Vec3) -> Vec3 {
-    v - 2. * dot(v, normal) * normal
+    v - 2. * v.dot(&normal) * normal
 }
 
 impl MaterialTrait for MetalMaterial {
@@ -62,7 +62,7 @@ impl MaterialTrait for MetalMaterial {
         };
         let attenuation = self.albedo;
 
-        if dot(&scattered.direction, &hit.normal) > 0. {
+        if scattered.direction.dot(&hit.normal) > 0. {
             Some(ScatterResult {
                 attenuation,
                 scattered,
@@ -80,7 +80,7 @@ pub struct DielectricMaterial {
 
 pub fn refract(v: &Vec3, normal: &Vec3, ni_over_nt: f32) -> Option<Vec3> {
     let uv: Vec3 = v.normalize();
-    let dt: f32 = dot(&uv, &normal);
+    let dt: f32 = uv.dot(&normal);
     let discriminant: f32 = 1.0 - ni_over_nt * ni_over_nt * (1. - dt * dt);
     if discriminant > 0. {
         Some(ni_over_nt * (uv - normal * dt) - normal * discriminant.sqrt())
@@ -103,15 +103,15 @@ impl MaterialTrait for DielectricMaterial {
 
         let scattered: Ray;
 
-        if dot(&ray.direction, &hit.normal) > 0. {
+        if ray.direction.dot(&hit.normal) > 0. {
             outward_normal = -hit.normal;
             ni_over_nt = self.refract_index;
             cosine =
-                self.refract_index * dot(&ray.direction, &hit.normal) / ray.direction.magnitude();
+                self.refract_index * ray.direction.dot(&hit.normal) / ray.direction.magnitude();
         } else {
             outward_normal = hit.normal;
             ni_over_nt = 1. / self.refract_index;
-            cosine = -dot(&ray.direction, &hit.normal) / ray.direction.magnitude();
+            cosine = -ray.direction.dot(&hit.normal) / ray.direction.magnitude();
         }
 
         let refracted = refract(&ray.direction, &outward_normal, ni_over_nt);

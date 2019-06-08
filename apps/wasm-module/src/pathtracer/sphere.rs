@@ -1,6 +1,6 @@
 use crate::pathtracer::camera::{Hit, Hitable, Ray};
 use crate::pathtracer::material::Material;
-use nalgebra_glm::{dot, Vec3};
+use nalgebra_glm::Vec3;
 
 pub struct Sphere {
     center: Vec3,
@@ -21,9 +21,9 @@ impl Sphere {
 impl Hitable for Sphere {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<Hit> {
         let oc: Vec3 = ray.origin - self.center;
-        let a: f32 = dot(&ray.direction, &ray.direction);
-        let b: f32 = dot(&oc, &ray.direction);
-        let c: f32 = dot(&oc, &oc) - (self.radius * self.radius);
+        let a: f32 = ray.direction.dot(&ray.direction);
+        let b: f32 = ray.direction.dot(&oc);
+        let c: f32 = oc.dot(&oc) - (self.radius * self.radius);
         let discriminant: f32 = (b * b) - (a * c);
 
         if discriminant > 0. {
