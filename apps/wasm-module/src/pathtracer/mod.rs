@@ -90,11 +90,11 @@ impl PathTracer {
                             .into(),
                         )));
                     } else {
-                        //                        self.world.add(Box::from(Sphere::new(
-                        //                            center,
-                        //                            0.2,
-                        //                            DielectricMaterial { refract_index: 1.5 }.into(),
-                        //                        )));
+                        self.world.add(Box::from(Sphere::new(
+                            center,
+                            0.2,
+                            DielectricMaterial { refract_index: 1.5 }.into(),
+                        )));
                     }
                 }
             }
@@ -117,11 +117,11 @@ impl PathTracer {
             }
             .into(),
         )));
-        //        self.world.add(Box::from(Sphere::new(
-        //            Vec3::new(0., 1., 0.),
-        //            1.,
-        //            DielectricMaterial { refract_index: 1.5 }.into(),
-        //        )));
+        self.world.add(Box::from(Sphere::new(
+            Vec3::new(0., 2., 0.),
+            1.,
+            DielectricMaterial { refract_index: 1.5 }.into(),
+        )));
     }
 }
 
