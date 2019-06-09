@@ -214,3 +214,24 @@ export function setRenderingSettings(settings) {
 
     workerPool.sendToEveryone(settings);
 }
+
+export function addSphere(id, data) {
+    data.type = 'add_sphere';
+    data.id = id;
+    workerPool.sendToEveryone(data);
+}
+
+export function updateSphere(id, data) {
+    data.type = 'update_sphere';
+    data.id = id;
+    workerPool.sendToEveryone(data);
+}
+
+export function removeSphere(id) {
+    workerPool.sendToEveryone({
+        type: 'remove_sphere',
+        id
+    });
+
+}
+

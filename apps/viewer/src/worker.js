@@ -38,6 +38,45 @@ import('../../wasm-module/pkg').then(wasm => {
                         renderingContext.sample_per_pixel = call.sample_per_pixel;
                     }
                     break;
+
+                case 'add_sphere':
+                    renderingContext.add_sphere(
+                        call.id,
+                        call.position.x,
+                        call.position.y,
+                        call.position.z,
+                        call.radius);
+
+                    if (call.material.type === 'diffuse') {
+                        renderingContext.set_lambert(
+                            call.id,
+                            call.material.albedo.r,
+                            call.material.albedo.g,
+                            call.material.albedo.b);
+                    }
+
+                    break;
+
+                case 'update_sphere':
+                    renderingContext.update_sphere(
+                        call.id,
+                        call.position.x,
+                        call.position.y,
+                        call.position.z,
+                        call.radius);
+
+                    if (call.material.type === 'diffuse') {
+                        renderingContext.set_lambert(
+                            call.id,
+                            call.material.albedo.r,
+                            call.material.albedo.g,
+                            call.material.albedo.b);
+                    }
+                    break;
+
+                case 'remove_sphere':
+                    renderingContext.remove_sphere(call.id);
+                    break;
             }
         } catch(e) {
             console.error('Error in worker', e);

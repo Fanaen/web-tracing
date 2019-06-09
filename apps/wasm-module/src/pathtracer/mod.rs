@@ -1,4 +1,4 @@
-use crate::pathtracer::camera::{Camera, Hitable, HitableList, Ray};
+use crate::pathtracer::camera::{Camera, HitableList, Ray};
 use crate::pathtracer::material::{
     DielectricMaterial, LambertianMaterial, MaterialTrait, MetalMaterial,
 };
@@ -9,14 +9,14 @@ use rand::Rng;
 use rand_core::SeedableRng;
 
 pub mod camera;
-mod material;
-mod sphere;
+pub mod material;
+pub mod sphere;
 
 pub struct PathTracer {
     rng: SmallRng,
-    camera: Camera,
-    samples: u16,
-    world: HitableList,
+    pub camera: Camera,
+    pub samples: u16,
+    pub world: HitableList,
 }
 
 impl PathTracer {
@@ -43,7 +43,7 @@ impl PathTracer {
 
     pub fn random_spheres(&mut self) {
         // Le sol
-        self.world.add(Sphere::new(
+        self.world.add(Sphere::new(0,
             Vec3::new(0., -1000., 0.),
             1000.,
             LambertianMaterial {
@@ -63,7 +63,7 @@ impl PathTracer {
 
                 if (center - Vec3::new(4., 0.2, 0.)).magnitude() > 0.9 {
                     if choose_mat < 0.8 {
-                        self.world.add(Sphere::new(
+                        self.world.add(Sphere::new(0,
                             center,
                             0.2,
                             LambertianMaterial {
@@ -76,7 +76,7 @@ impl PathTracer {
                             .into(),
                         ).into());
                     } else if choose_mat < 1. {
-                        self.world.add(Sphere::new(
+                        self.world.add(Sphere::new(0,
                             center,
                             0.2,
                             MetalMaterial {
@@ -90,7 +90,7 @@ impl PathTracer {
                             .into(),
                         ).into());
                     } else {
-                        self.world.add(Sphere::new(
+                        self.world.add(Sphere::new(0,
                             center,
                             0.2,
                             DielectricMaterial { refract_index: 1.5 }.into(),
@@ -100,7 +100,7 @@ impl PathTracer {
             }
         }
 
-        self.world.add(Sphere::new(
+        self.world.add(Sphere::new(0,
             Vec3::new(-4., 1., 0.),
             1.,
             LambertianMaterial {
@@ -108,7 +108,7 @@ impl PathTracer {
             }
             .into(),
         ).into());
-        self.world.add(Sphere::new(
+        self.world.add(Sphere::new(0,
             Vec3::new(4., 1., 0.),
             1.,
             MetalMaterial {
@@ -117,7 +117,7 @@ impl PathTracer {
             }
             .into(),
         ).into());
-        self.world.add(Sphere::new(
+        self.world.add(Sphere::new(0,
             Vec3::new(0., 2., 0.),
             1.,
             DielectricMaterial { refract_index: 1.5 }.into(),

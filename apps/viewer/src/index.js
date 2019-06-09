@@ -1,5 +1,7 @@
 import * as wasm from './wasm-module';
 
+window.webtracing = wasm;
+
 // Update the canvas
 const canvas = document.getElementById('web-tracing-canvas');
 let ctx = undefined;

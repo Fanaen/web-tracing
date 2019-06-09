@@ -106,6 +106,7 @@ pub enum HitableShape {
 #[enum_dispatch(HitableShape)]
 pub trait Hitable {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<Hit>;
+    fn id(&self) -> u32;
 }
 
 pub struct HitableList {
@@ -122,10 +123,16 @@ impl HitableList {
     pub fn add(&mut self, hitable: HitableShape) {
         self.list.push(hitable);
     }
-}
 
-impl Hitable for HitableList {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<Hit> {
+    pub fn find(&mut self, id: u32) -> Option<&mut HitableShape> {
+        self.list.iter_mut().find(|shape| shape.id() == id)
+    }
+
+    pub fn remove(&mut self, id: u32) {
+        self.list.retain(|shape| shape.id() != id);
+    }
+
+    pub fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<Hit> {
         let mut closest_so_far = t_max;
         let mut closest_hit: Option<Hit> = None;
 

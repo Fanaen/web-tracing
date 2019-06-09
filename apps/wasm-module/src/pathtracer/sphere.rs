@@ -3,14 +3,16 @@ use crate::pathtracer::material::Material;
 use nalgebra_glm::Vec3;
 
 pub struct Sphere {
-    center: Vec3,
-    radius: f32,
-    material: Material,
+    id: u32,
+    pub center: Vec3,
+    pub radius: f32,
+    pub material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32, material: Material) -> Sphere {
+    pub fn new(id: u32, center: Vec3, radius: f32, material: Material) -> Sphere {
         Sphere {
+            id,
             center,
             radius,
             material,
@@ -53,5 +55,9 @@ impl Hitable for Sphere {
         }
 
         None
+    }
+
+    fn id(&self) -> u32 {
+        self.id
     }
 }
