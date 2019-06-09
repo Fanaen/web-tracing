@@ -59,6 +59,20 @@
 #web-tracing-display.hidden {
     display: none;
 }
+
+#web-tracing-fullscreen-canvas {
+    z-index: 20;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0
+}
+#web-tracing-fullscreen-canvas.hidden {
+    display: none;
+}
+
+
 .loading-overlay {
     position: absolute;
     top: 0px;

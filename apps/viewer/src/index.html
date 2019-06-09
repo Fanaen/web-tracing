@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="../node_modules/@fortawesome/fontawesome-free/css/all.css">
 </head>
 <body>
-
   <div class="web-tracing">
     <div class="data">
       <div id="web-tracing-display">
@@ -20,6 +19,7 @@
     <div class="actions">
       <i class="btn fas fa-minus" id="close-web-tracing"></i>
       <i class="btn fas fa-play" id="draw-web-tracing"></i>
+      <i class="btn fas fa-expand" id="expand-web-tracing"></i>
       <input type="number" id="sample-per-pixel" value="4" title="Sample per pixel">
       <input type="number" id="tile-size" value="64" title="Tile size">
     </div>
@@ -30,6 +30,7 @@
     <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
     <a-sky color="#ECECEC"></a-sky>
   </a-scene>
+  <canvas id="web-tracing-fullscreen-canvas" class="hidden" width="100vw" height="100vh"></canvas>
   <script src="bootstrap.js"></script>
   <script src="http://localhost:8080/node_modules/aframe-inspector/dist/aframe-inspector.js"></script>
 </body>
