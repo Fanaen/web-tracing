@@ -156,19 +156,34 @@ export function draw(ctx, tile_size, width, height) {
     nbRays = width * height * samplePerPixel;
 
     // Prepare the jobs
+    const jobs = [];
     for (let tile_y = 0; tile_y < height; tile_y += tile_size) {
         for (let tile_x = 0; tile_x < width; tile_x += tile_size) {
-            const job = {
+            jobs.push({
                 type: 'draw',
                 tile_x,
                 tile_y,
                 tile_size,
                 width,
                 height
-            };
-
-            workerPool.beginJob(job, ctx);
+            });
         }
+    }
+
+    // Tile ordering
+    const centerX = Math.floor(width / tile_size / 2) * tile_size;
+    const centerY = Math.floor(height / tile_size / 2) * tile_size;
+    function distanceFromCenter(tile) {
+        const x = tile.tile_x - centerX;
+        const y = tile.tile_y - centerY;
+
+        return Math.sqrt(x * x + y * y);
+    }
+
+    jobs.sort((a, b) => distanceFromCenter(a) - distanceFromCenter(b));
+
+    for (const job of jobs) {
+        workerPool.beginJob(job, ctx);
     }
 }
 
