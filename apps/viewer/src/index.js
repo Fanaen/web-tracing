@@ -16,14 +16,17 @@ window.onblur = function() {
     focused = false;
 };
 
+const samplePerPixelInput = document.getElementById('sample-per-pixel');
+const tileSizeInput = document.getElementById('tile-size');
+
 function updateCanvas() {
     if (ctx) {
         wasm.setRenderingSettings({
-            sample_per_pixel: 4
+            sample_per_pixel: parseInt(samplePerPixelInput.value)
         });
         const cameraEntity = document.getElementById('main-camera');
         wasm.setCamera(cameraEntity);
-        wasm.draw(ctx, 16, 320, 160);
+        wasm.draw(ctx, parseInt(tileSizeInput.value), canvas.width, canvas.height);
     }
 }
 

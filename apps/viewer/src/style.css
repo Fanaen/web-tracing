@@ -37,11 +37,18 @@
 .web-tracing .actions {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
 }
 
 .web-tracing .actions * {
     margin: 10px 0 0 10px;
 }
+
+.web-tracing .actions input {
+    border: 0 solid black;
+    width: 40px;
+}
+
 
 #web-tracing-display {
     position: relative;
