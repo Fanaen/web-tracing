@@ -8,13 +8,11 @@
 </head>
 <body>
   <div class="web-tracing">
-    <div class="data">
+    <div id="web-tracing-data">
       <div id="web-tracing-display">
         <div class="loading-overlay"><div class="loader"></div></div>
         <canvas id="web-tracing-canvas" width="320px" height="160px"></canvas>
       </div>
-      <p id="draw-in"></p>
-      <p id="applied-in"></p>
     </div>
     <div class="actions">
       <i class="btn fas fa-minus" id="close-web-tracing"></i>
@@ -22,6 +20,8 @@
       <i class="btn fas fa-expand" id="expand-web-tracing"></i>
       <input type="number" id="sample-per-pixel" value="4" title="Sample per pixel">
       <input type="number" id="tile-size" value="64" title="Tile size">
+      <p id="draw-in"></p>
+      <p id="applied-in"></p>
     </div>
   </div>
   <a-scene inspector="url: http://localhost:8080/node_modules/aframe-inspector/dist/aframe-inspector.js" vr-mode-ui="enabled: false">

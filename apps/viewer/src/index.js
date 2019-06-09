@@ -13,12 +13,45 @@ if (fullscreenCanvas.getContext) {
     fullscreenCtx = fullscreenCanvas.getContext('2d');
 }
 
+// -- UX --
+// Update button
+const drawButton = document.getElementById('draw-web-tracing');
+drawButton.onclick = () => updateCanvas();
+
+// Update on F4
+document.onkeyup = function(e) {
+    if (e.key === 'F9') {
+        updateCanvas();
+    }
+    if (e.key === 'F4') {
+        updateCanvas();
+    }
+
+    if (e.key === 'Escape') {
+        toggleExpand();
+    }
+};
+
+// Hide button
+const webtracingData = document.getElementById('web-tracing-data');
+const hideButton = document.getElementById('close-web-tracing');
+
+const webtracingDisplayClass = webtracingData.className;
+let isWebtracingDisplayVisible = true;
+
+hideButton.onclick = () => {
+    isWebtracingDisplayVisible = !isWebtracingDisplayVisible;
+    webtracingData.className = webtracingDisplayClass + (isWebtracingDisplayVisible ? '' : ' hidden');
+    hideButton.className = isWebtracingDisplayVisible ? 'btn fas fa-minus' : 'btn fas fa-plus'
+};
+
 // Expand button
 const expandButton = document.getElementById('expand-web-tracing');
 let isExpanded = false;
 function toggleExpand() {
     isExpanded = !isExpanded;
     fullscreenCanvas.className = isExpanded ? '': 'hidden';
+    webtracingData.className = isExpanded ? 'hidden': '';
 
     if(isExpanded) updateCanvas();
 }
@@ -37,6 +70,7 @@ window.onblur = function() {
 const samplePerPixelInput = document.getElementById('sample-per-pixel');
 const tileSizeInput = document.getElementById('tile-size');
 
+// -- Path tracing --
 function updateCanvas() {
     const currentCtx = isExpanded ? fullscreenCtx : ctx;
     const currentCanvas = isExpanded ? fullscreenCanvas : canvas;
@@ -67,35 +101,3 @@ function realtimeUpdateCanvas() {
 
 //realtimeUpdateCanvas();
 updateCanvas();
-
-// -- UX --
-// Update button
-const drawButton = document.getElementById('draw-web-tracing');
-drawButton.onclick = () => updateCanvas();
-
-// Update on F4
-document.onkeyup = function(e) {
-    if (e.key === 'F9') {
-        updateCanvas();
-    }
-    if (e.key === 'F4') {
-        updateCanvas();
-    }
-
-    if (e.key === 'Escape') {
-        toggleExpand();
-    }
-};
-
-// Hide button
-const webtracingDisplay = document.getElementById('web-tracing-display');
-const hideButton = document.getElementById('close-web-tracing');
-
-const webtracingDisplayClass = webtracingDisplay.className;
-let isWebtracingDisplayVisible = true;
-
-hideButton.onclick = () => {
-    isWebtracingDisplayVisible = !isWebtracingDisplayVisible;
-    webtracingDisplay.className = webtracingDisplayClass + (isWebtracingDisplayVisible ? '' : ' hidden');
-    hideButton.className = isWebtracingDisplayVisible ? 'btn fas fa-minus' : 'btn fas fa-plus'
-};
