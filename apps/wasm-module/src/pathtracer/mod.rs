@@ -8,7 +8,7 @@ use nalgebra_glm::Vec3;
 use rand::rngs::SmallRng;
 use rand::Rng;
 use rand_core::SeedableRng;
-use nalgebra_glm::distance2;
+use nalgebra_glm::length2;
 
 pub mod camera;
 pub mod hit;
@@ -163,10 +163,22 @@ pub fn color(ray: Ray, world: &HitableList, rng: &mut SmallRng, depth: i32) -> V
         Option::Some(hit) => {
             // todo: implement shadow rays.
             // check if there is an object between the light and the shading point.
-            let light_pos = Vec3::new(0., 0.5, -2.);
-            let value = 5.0;
-            let light_attenuation = 1.0 / distance2(&hit.point, &light_pos);
-            let light_value = value * light_attenuation;
+            let light_pos = Vec3::new(0., 1.5, -2.);
+            let value = 1.0;
+            let shadow_ray_dir = light_pos - hit.point;
+            let distance_squared = length2(&shadow_ray_dir);
+            let distance = distance_squared.sqrt();
+            let light_attenuation = 1.0 / distance_squared;
+            let mut light_value = value * light_attenuation;
+
+            // Test for shadows.
+            // todo: trace more than one ray.
+            let shadow_ray = Ray {
+                origin: hit.point,
+                direction: shadow_ray_dir / distance};
+            if world.hit(&shadow_ray, 0.001, distance + 0.001).is_some() {
+                light_value = 0.0;
+            }
 
             // Bounce the ray.
             match hit.material.scatter(&ray, &hit, rng) {

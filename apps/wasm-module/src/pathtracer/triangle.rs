@@ -43,8 +43,9 @@ impl Hitable for Triangle {
         let plane: Vec3 = ray.direction.cross(&v0v2);
         let angle_triangle_to_camera: f32 = v0v1.dot(&plane);
 
-        // Parallel or behind ?
-        if angle_triangle_to_camera < K_EPSILON {
+        // Parallel ?
+        // To enable backface culling, remove the "angle_triangle_to_camera >= 0.0" check.
+        if angle_triangle_to_camera < K_EPSILON && angle_triangle_to_camera >= 0.0 {
             return None;
         }
 
