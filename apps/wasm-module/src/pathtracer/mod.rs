@@ -8,10 +8,12 @@ use nalgebra_glm::Vec3;
 use rand::rngs::SmallRng;
 use rand::Rng;
 use rand_core::SeedableRng;
+use nalgebra_glm::distance2;
 
 pub mod camera;
-pub mod material;
 pub mod hit;
+pub mod material;
+pub mod math;
 pub mod sphere;
 pub mod triangle;
 
@@ -148,26 +150,42 @@ pub fn random_in_unit_sphere(rng: &mut SmallRng) -> Vec3 {
     p
 }
 
+/// Compute the color for a given camera ray.
 pub fn color(ray: Ray, world: &HitableList, rng: &mut SmallRng, depth: i32) -> Vec3 {
+    // Recursion lock.
+    if depth >= 10 {
+        return Vec3::new(0., 0., 0.)
+    }
+
+    // Intersect the camera ray with the scene.
     match world.hit(&ray, 0.001, std::f32::MAX) {
+        // The ray hits something.
         Option::Some(hit) => {
-            if depth < 10 {
-                if let Option::Some(scatter) = hit.material.scatter(&ray, &hit, rng) {
+            // todo: implement shadow rays.
+            // check if there is an object between the light and the shading point.
+            let light_pos = Vec3::new(0., 0.5, -2.);
+            let value = 5.0;
+            let light_attenuation = 1.0 / distance2(&hit.point, &light_pos);
+            let light_value = value * light_attenuation;
+
+            // Bounce the ray.
+            match hit.material.scatter(&ray, &hit, rng) {
+                // The material can be scattered.
+                Option::Some(scatter) => {
                     let c = color(scatter.scattered, world, rng, depth + 1);
                     Vec3::new(
-                        scatter.attenuation.x * c.x,
-                        scatter.attenuation.y * c.y,
-                        scatter.attenuation.z * c.z,
-                    )
-                } else {
+                        light_value + scatter.attenuation.x * c.x,
+                        light_value + scatter.attenuation.y * c.y,
+                        light_value + scatter.attenuation.z * c.z)
+                }
+                // The material cannot be scattered.
+                Option::None => {
                     Vec3::new(0., 0., 0.)
                 }
-            } else {
-                Vec3::new(0., 0., 0.)
             }
         }
+        // The ray doesn't hit anything.
         Option::None => {
-            // On affiche le fond sinon
             let unit_direction = ray.direction.normalize();
             let t = 0.5 * (unit_direction.y + 1.);
             (1. - t) * Vec3::new(1., 1., 1.) + (t * Vec3::new(0.5, 0.7, 1.))

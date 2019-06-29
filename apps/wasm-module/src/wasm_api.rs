@@ -1,12 +1,14 @@
 use wasm_bindgen::prelude::*;
 use nalgebra_glm::Vec3;
+use nalgebra_glm::sqrt;
 use crate::pathtracer::camera::{Camera};
 use crate::pathtracer::PathTracer;
 use crate::utils::set_panic_hook;
 use crate::pathtracer::material::LambertianMaterial;
 use crate::pathtracer::hit::HitableShape;
-use crate::pathtracer::triangle::Triangle;
+use crate::pathtracer::math::saturate;
 use crate::pathtracer::sphere::Sphere;
+use crate::pathtracer::triangle::Triangle;
 
 #[wasm_bindgen]
 pub struct Context {
@@ -67,9 +69,10 @@ impl Context {
         for y in (tile_y..(tile_y + tile_size)).rev() {
             for x in tile_x..(tile_x + tile_size) {
                 let col = self.pathtracer.compute_pixel(x, y);
-                data.push((255.99 * col.x.sqrt()) as u8);
-                data.push((255.99 * col.y.sqrt()) as u8);
-                data.push((255.99 * col.z.sqrt()) as u8);
+                let better_color = saturate(sqrt(&col));
+                data.push((255.99 * better_color.x) as u8);
+                data.push((255.99 * better_color.y) as u8);
+                data.push((255.99 * better_color.z) as u8);
                 data.push(255);
             }
         }
