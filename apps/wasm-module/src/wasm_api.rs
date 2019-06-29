@@ -1,10 +1,12 @@
-use crate::pathtracer::camera::{Camera, HitableShape};
+use wasm_bindgen::prelude::*;
+use nalgebra_glm::Vec3;
+use crate::pathtracer::camera::{Camera};
 use crate::pathtracer::PathTracer;
 use crate::utils::set_panic_hook;
 use crate::pathtracer::material::LambertianMaterial;
+use crate::pathtracer::hit::HitableShape;
+use crate::pathtracer::triangle::Triangle;
 use crate::pathtracer::sphere::Sphere;
-use nalgebra_glm::Vec3;
-use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct Context {
@@ -95,7 +97,8 @@ impl Context {
                     sphere.center.y = y;
                     sphere.center.z = z;
                     sphere.radius = radius;
-                }
+                },
+                _ => ()
             }
 
             true
@@ -109,6 +112,69 @@ impl Context {
         self.pathtracer.world.remove(id);
     }
 
+
+    pub fn add_triangle(&mut self,
+                        id: u32,
+                        a_x: f32,
+                        a_y: f32,
+                        a_z: f32,
+                        b_x: f32,
+                        b_y: f32,
+                        b_z: f32,
+                        c_x: f32,
+                        c_y: f32,
+                        c_z: f32) {
+        self.pathtracer.world.add(Triangle::new(
+            id,
+            Vec3::new(a_x, a_y, a_z),
+            Vec3::new(b_x, b_y, b_z),
+            Vec3::new(c_x, c_y, c_z),
+            LambertianMaterial {
+                albedo: Vec3::new(0.5, 0.5, 0.5),
+            }.into(),
+        ).into());
+    }
+
+    pub fn update_triangle(&mut self,
+                           id: u32,
+                           a_x: f32,
+                           a_y: f32,
+                           a_z: f32,
+                           b_x: f32,
+                           b_y: f32,
+                           b_z: f32,
+                           c_x: f32,
+                           c_y: f32,
+                           c_z: f32
+    ) -> bool {
+        if let Some(shape) = self.pathtracer.world.find(id) {
+
+            match shape {
+                HitableShape::Triangle(triangle) => {
+                    triangle.vertex_a.x = a_x;
+                    triangle.vertex_a.y = a_y;
+                    triangle.vertex_a.z = a_z;
+                    triangle.vertex_b.x = b_x;
+                    triangle.vertex_b.y = b_y;
+                    triangle.vertex_b.z = b_z;
+                    triangle.vertex_c.x = c_x;
+                    triangle.vertex_c.y = c_y;
+                    triangle.vertex_c.z = c_z;
+                },
+                _ => ()
+            }
+
+            true
+        }
+        else {
+            false
+        }
+    }
+
+    pub fn remove_triangle(&mut self, id: u32) {
+        self.pathtracer.world.remove(id);
+    }
+
     pub fn set_lambert(&mut self, id: u32, r: u32, g: u32, b: u32) -> bool {
         if let Some(shape) = self.pathtracer.world.find(id) {
 
@@ -117,7 +183,12 @@ impl Context {
                     sphere.material = LambertianMaterial {
                         albedo: Vec3::new(r as f32 / 255.9, g as f32 / 255.9, b as f32 / 255.9),
                     }.into();
-                }
+                },
+                HitableShape::Triangle(triangle) => {
+                    triangle.material = LambertianMaterial {
+                        albedo: Vec3::new(r as f32 / 255.9, g as f32 / 255.9, b as f32 / 255.9),
+                    }.into();
+                },
             }
 
             true

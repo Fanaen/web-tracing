@@ -77,6 +77,56 @@ import('../../wasm-module/pkg').then(wasm => {
                 case 'remove_sphere':
                     renderingContext.remove_sphere(call.id);
                     break;
+
+
+                case 'add_triangle':
+                    renderingContext.add_triangle(
+                        call.id,
+                        call.vertexA.x,
+                        call.vertexA.y,
+                        call.vertexA.z,
+                        call.vertexB.x,
+                        call.vertexB.y,
+                        call.vertexB.z,
+                        call.vertexC.x,
+                        call.vertexC.y,
+                        call.vertexC.z);
+
+                    if (call.material.type === 'diffuse') {
+                        renderingContext.set_lambert(
+                            call.id,
+                            call.material.albedo.r,
+                            call.material.albedo.g,
+                            call.material.albedo.b);
+                    }
+
+                    break;
+
+                case 'update_triangle':
+                    renderingContext.update_triangle(
+                        call.id,
+                        call.vertexA.x,
+                        call.vertexA.y,
+                        call.vertexA.z,
+                        call.vertexB.x,
+                        call.vertexB.y,
+                        call.vertexB.z,
+                        call.vertexC.x,
+                        call.vertexC.y,
+                        call.vertexC.z);
+
+                    if (call.material.type === 'diffuse') {
+                        renderingContext.set_lambert(
+                            call.id,
+                            call.material.albedo.r,
+                            call.material.albedo.g,
+                            call.material.albedo.b);
+                    }
+                    break;
+
+                case 'remove_triangle':
+                    renderingContext.remove_triangle(call.id);
+                    break;
             }
         } catch(e) {
             console.error('Error in worker', e);

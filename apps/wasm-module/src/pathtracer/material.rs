@@ -1,4 +1,5 @@
-use crate::pathtracer::camera::{Hit, Ray};
+use crate::pathtracer::camera::Ray;
+use crate::pathtracer::hit::Hit;
 use crate::pathtracer::random_in_unit_sphere;
 use enum_dispatch::enum_dispatch;
 use nalgebra_glm::Vec3;

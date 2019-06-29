@@ -1,5 +1,6 @@
-use crate::pathtracer::camera::{Hit, Hitable, Ray};
+use crate::pathtracer::camera::Ray;
 use crate::pathtracer::material::Material;
+use crate::pathtracer::hit::{Hitable, Hit};
 use nalgebra_glm::Vec3;
 
 pub struct Sphere {
@@ -30,12 +31,12 @@ impl Hitable for Sphere {
 
         if discriminant > 0. {
             let rooted_discriminant = discriminant.sqrt();
-            let temp: f32 = (-b - rooted_discriminant) / a;
+            let t: f32 = (-b - rooted_discriminant) / a;
 
-            let point = ray.point_at_parameter(temp);
-            if temp < t_max && temp > t_min {
+            let point = ray.point_at_parameter(t);
+            if t < t_max && t > t_min {
                 return Some(Hit {
-                    t: temp,
+                    t: t,
                     point,
                     normal: ((point - self.center) / self.radius).normalize(),
                     material: self.material.clone(),

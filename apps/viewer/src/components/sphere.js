@@ -1,4 +1,4 @@
-let objectId = 0;
+window.objectId = window.objectId || 0;
 
 function accessWebtracing(callback) {
     if (window.webtracing) {
@@ -16,7 +16,7 @@ function convertHex(hex,alpha){
     return { r, g, b, a: alpha };
 }
 
-function getProperties(component) {
+function getSphereProperties(component) {
     return {
         position: component.el.object3D.position,
         radius: component.el.components.geometry.data.radius,
@@ -31,18 +31,18 @@ function getProperties(component) {
 AFRAME.registerComponent('rendered-sphere', {
     schema: {},
     init: function () {
-        this.objectId = objectId++;
+        this.objectId = window.objectId++;
 
         const position = this.el.object3D.position;
         this.lastPosition = { x: position.x, y: position.y, z: position.z };
         this.lastColor = this.el.components.material.data.color;
-        accessWebtracing(wasm => wasm.addSphere(this.objectId, getProperties(this)));
+        accessWebtracing(wasm => wasm.addSphere(this.objectId, getSphereProperties(this)));
     },
     update: function () {
         const position = this.el.object3D.position;
         this.lastPosition = { x: position.x, y: position.y, z: position.z };
         this.lastColor = this.el.components.material.data.color;
-        accessWebtracing(wasm => wasm.updateSphere(this.objectId, getProperties(this)));
+        accessWebtracing(wasm => wasm.updateSphere(this.objectId, getSphereProperties(this)));
     },
     tick: function () {
         // Update is not called when the color or the position changes. We have to check every tick for this
@@ -53,7 +53,7 @@ AFRAME.registerComponent('rendered-sphere', {
             || this.lastPosition.y !== position.y
             || this.lastPosition.z !== position.z
             || this.lastColor !== color) {
-            accessWebtracing(wasm => wasm.updateSphere(this.objectId, getProperties(this)));
+            accessWebtracing(wasm => wasm.updateSphere(this.objectId, getSphereProperties(this)));
             this.lastPosition = { x: position.x, y: position.y, z: position.z };
         }
     },

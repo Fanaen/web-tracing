@@ -77,6 +77,7 @@ class WorkerPool {
     }
 
     sendToEveryone(data) {
+        console.log(data);
         for (const worker of this.workers) {
             worker.sendMessage(data);
         }
@@ -235,3 +236,22 @@ export function removeSphere(id) {
 
 }
 
+export function addTriangle(id, data) {
+    data.type = 'add_triangle';
+    data.id = id;
+    workerPool.sendToEveryone(data);
+}
+
+export function updateTriangle(id, data) {
+    data.type = 'update_triangle';
+    data.id = id;
+    workerPool.sendToEveryone(data);
+}
+
+export function removeTriangle(id) {
+    workerPool.sendToEveryone({
+        type: 'remove_triangle',
+        id
+    });
+
+}

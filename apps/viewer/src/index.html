@@ -4,6 +4,7 @@
   <title> Web-tracing </title>
   <script src="../node_modules/aframe/dist/aframe-master.min.js"></script>
   <script src="../src/components/sphere.js"></script>
+  <script src="../src/components/triangle.js"></script>
   <link href="src/style.css" rel="stylesheet">
   <link rel="stylesheet" href="../node_modules/@fortawesome/fontawesome-free/css/all.css">
 </head>
@@ -27,7 +28,12 @@
   </div>
   <a-scene inspector="url: http://localhost:8080/node_modules/aframe-inspector/dist/aframe-inspector.js" vr-mode-ui="enabled: false">
     <a-entity id="main-camera" position="0 1.25 0" camera look-controls wasd-controls></a-entity>
-    <a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E" rendered-sphere=""></a-sphere>
+    <a-sphere position="0 1.25 -7" radius="1.25" color="#EF2D5E" rendered-sphere=""></a-sphere>
+
+    <a-sphere position="0 1.25 -4" radius="0.05" color="#3ceb32" rendered-sphere=""></a-sphere>
+    <a-sphere position="-0.5 1.25 -4" radius="0.05" color="#3ceb32" rendered-sphere=""></a-sphere>
+    <a-sphere position="0.2 1.4 -4.3" radius="0.05" color="#3ceb32" rendered-sphere=""></a-sphere>
+    <a-triangle vertex-b="0 1.25 -4" vertex-a="-0.5 1.25 -4" vertex-c="0.2 1.4 -4.3" color="#5093ef" rendered-triangle=""></a-triangle>
     <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
     <a-sky color="#ECECEC"></a-sky>
   </a-scene>

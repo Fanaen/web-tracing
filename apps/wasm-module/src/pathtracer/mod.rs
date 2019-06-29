@@ -1,8 +1,9 @@
-use crate::pathtracer::camera::{Camera, HitableList, Ray};
+use crate::pathtracer::camera::{Camera, Ray};
 use crate::pathtracer::material::{
     DielectricMaterial, LambertianMaterial, MaterialTrait, MetalMaterial,
 };
 use crate::pathtracer::sphere::Sphere;
+use crate::pathtracer::hit::HitableList;
 use nalgebra_glm::Vec3;
 use rand::rngs::SmallRng;
 use rand::Rng;
@@ -10,7 +11,9 @@ use rand_core::SeedableRng;
 
 pub mod camera;
 pub mod material;
+pub mod hit;
 pub mod sphere;
+pub mod triangle;
 
 pub struct PathTracer {
     rng: SmallRng,
