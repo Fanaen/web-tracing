@@ -1,5 +1,8 @@
 
 //
+// Run chrome canary using the following flags:
+// .\chrome.exe --use-cmd-decoder=passthrough --use-angle=gl --enable-webgl2-compute-context --use-gl=angle
+//
 // References:
 // - https://www.khronos.org/registry/webgl/specs/latest/2.0-compute/
 // - https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/bPD47wqY-r8/discussion
