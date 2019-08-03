@@ -27,11 +27,20 @@ const script = async () => {
   // ComputeShader source
   // language=GLSL
   const computeShaderSource = `#version 310 es
+
   layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
   layout (rgba8, binding = 0) writeonly uniform highp image2D destTex;
+
   void main() {
+    // gl_LocalInvocationId: local index of the worker in its group.
+    // gl_WorkGroupId : index of the current working group.
+    // gl_WorkGroupSize : local size of a work group. here it is 16x16x1.
+    // gl_GlovalInvocationId : global exectuion index of the current worker.
+    // gl_GlobalInvocationId = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
+
     ivec2 storePos = ivec2(gl_GlobalInvocationID.xy);
-    imageStore(destTex, storePos, vec4(vec2(gl_WorkGroupID.xy) / vec2(gl_NumWorkGroups.xy), 0.0, 1.0));
+    vec2 imageSize = vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy); 
+    imageStore(destTex, storePos, vec4(vec2(storePos) / imageSize, 0.0, 1.0));
   }
   `;
 
