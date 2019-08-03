@@ -84,6 +84,10 @@ function updateCanvas() {
     }
 
     if (currentCtx) {
+        wasm.createOrEditLight(901, {
+            position: {x: 0.0, y: 1.5, z: -2.0},
+            intensity: 1.0
+        });
         wasm.setRenderingSettings({
             sample_per_pixel: parseInt(samplePerPixelInput.value)
         });

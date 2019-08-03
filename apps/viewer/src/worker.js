@@ -39,6 +39,19 @@ import('../../wasm-module/pkg').then(wasm => {
                     }
                     break;
 
+                case 'create_or_edit_light':
+                    renderingContext.create_or_edit_light(
+                        call.id,
+                        call.position.x,
+                        call.position.y,
+                        call.position.z,
+                        call.intensity);
+                    break;
+
+                case 'remove_light':
+                    renderingContext.remove_light(call.id);
+                    break;
+
                 case 'add_sphere':
                     renderingContext.add_sphere(
                         call.id,

@@ -216,6 +216,19 @@ export function setRenderingSettings(settings) {
     workerPool.sendToEveryone(settings);
 }
 
+export function createOrEditLight(id, data) {
+    data.type = 'create_or_edit_light';
+    data.id = id;
+    workerPool.sendToEveryone(data);
+}
+
+export function removeLight(id) {
+    workerPool.sendToEveryone({
+        type: 'remove_light',
+        id
+    });
+}
+
 export function addSphere(id, data) {
     data.type = 'add_sphere';
     data.id = id;
@@ -233,7 +246,6 @@ export function removeSphere(id) {
         type: 'remove_sphere',
         id
     });
-
 }
 
 export function addTriangle(id, data) {
