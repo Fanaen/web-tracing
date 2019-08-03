@@ -20,13 +20,13 @@ function getLightProperties(component) {
     console.log("Get light properties.");
     console.log(component);
     return {
-        position: {x: 0.0, y: 1.5, z: -2.0},//component.el.object3D.position,
+        position: component.el.object3D.position,
         intensity: 1.0
     };
 }
 
 // Registering component in foo-component.js
-AFRAME.registerComponent('light', {
+AFRAME.registerComponent('rendered-light', {
     schema: {},
     init: function () {
         console.log("Light init.");
