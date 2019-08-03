@@ -9,6 +9,7 @@ use crate::pathtracer::hit::HitableShape;
 use crate::pathtracer::math::saturate;
 use crate::pathtracer::sphere::Sphere;
 use crate::pathtracer::triangle::Triangle;
+use crate::pathtracer::pointlight::PointLight;
 
 #[wasm_bindgen]
 pub struct Context {
@@ -78,6 +79,33 @@ impl Context {
         }
 
         Ok(data)
+    }
+
+    /// Create a new light or edit an existing one.
+    pub fn create_or_edit_light(&mut self, id: u32, x: f32, y: f32, z: f32, intensity: f32)
+    {
+        // Check if the light already exists.
+        match self.pathtracer.lights.find(id) {
+            // Edit the light.
+            Some(light) => {
+                light.position.x = x;
+                light.position.y = y;
+                light.position.z = z;
+                light.intensity = intensity;
+            },
+            // Create a new light.
+            None => {
+                let light = PointLight::new(
+                    id,
+                    Vec3::new(x, y, z),
+                    intensity);
+                self.pathtracer.lights.add(light.into());
+            }
+        }
+    }
+
+    pub fn remove_light(&mut self, id: u32) {
+        self.pathtracer.lights.remove(id);
     }
 
     pub fn add_sphere(&mut self, id: u32, x: f32, y: f32, z: f32, radius: f32) {

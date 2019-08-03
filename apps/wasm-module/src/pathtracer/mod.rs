@@ -4,6 +4,8 @@ use crate::pathtracer::material::{
 };
 use crate::pathtracer::sphere::Sphere;
 use crate::pathtracer::hit::HitableList;
+use crate::pathtracer::pointlight::LightList;
+
 use nalgebra_glm::Vec3;
 use rand::rngs::SmallRng;
 use rand::Rng;
@@ -16,12 +18,14 @@ pub mod material;
 pub mod math;
 pub mod sphere;
 pub mod triangle;
+pub mod pointlight;
 
 pub struct PathTracer {
     rng: SmallRng,
     pub camera: Camera,
     pub samples: u16,
     pub world: HitableList,
+    pub lights: LightList
 }
 
 impl PathTracer {
@@ -31,6 +35,7 @@ impl PathTracer {
             rng: SmallRng::seed_from_u64(0),
             samples,
             world: HitableList::new(),
+            lights: LightList::new()
         }
     }
 
@@ -40,7 +45,7 @@ impl PathTracer {
             let u = (x as f32 + self.rng.gen_range(0., 1.)) / self.camera.width as f32;
             let v = (y as f32 + self.rng.gen_range(0., 1.)) / self.camera.height as f32;
             let ray = self.camera.get_ray(u, v);
-            col = col + color(ray, &self.world, &mut self.rng, 0);
+            col = col + color(ray, &self.world, &self.lights, &mut self.rng, 0);
         }
 
         col / self.samples as f32
@@ -151,7 +156,7 @@ pub fn random_in_unit_sphere(rng: &mut SmallRng) -> Vec3 {
 }
 
 /// Compute the color for a given camera ray.
-pub fn color(ray: Ray, world: &HitableList, rng: &mut SmallRng, depth: i32) -> Vec3 {
+pub fn color(ray: Ray, world: &HitableList, lights: &LightList, rng: &mut SmallRng, depth: i32) -> Vec3 {
     // Recursion lock.
     if depth >= 10 {
         return Vec3::new(0., 0., 0.)
@@ -161,34 +166,42 @@ pub fn color(ray: Ray, world: &HitableList, rng: &mut SmallRng, depth: i32) -> V
     match world.hit(&ray, 0.001, std::f32::MAX) {
         // The ray hits something.
         Option::Some(hit) => {
-            // todo: implement shadow rays.
-            // check if there is an object between the light and the shading point.
-            let light_pos = Vec3::new(0., 1.5, -2.);
-            let value = 1.0;
-            let shadow_ray_dir = light_pos - hit.point;
-            let distance_squared = length2(&shadow_ray_dir);
-            let distance = distance_squared.sqrt();
-            let light_attenuation = 1.0 / distance_squared;
-            let mut light_value = value * light_attenuation;
 
-            // Test for shadows.
-            // todo: trace more than one ray.
-            let shadow_ray = Ray {
-                origin: hit.point,
-                direction: shadow_ray_dir / distance};
-            if world.hit(&shadow_ray, 0.001, distance + 0.001).is_some() {
-                light_value = 0.0;
-            }
+            // Compute direct lighting.
+            // Pick a random light.
+            let direct_lighting = match lights.pick(rng) {
+                Some(light) => {
+                    let light_pos = &light.position;
+                    let intensity = &light.intensity;
+
+                    // Cast a shadow ray.
+                    // Check if there is an object between the light and the shading point.
+                    // todo: trace more than one ray.
+                    let shadow_ray_dir = light_pos - hit.point;
+                    let distance_squared = length2(&shadow_ray_dir);
+                    let distance = distance_squared.sqrt();
+                    let light_attenuation = 1.0 / distance_squared;
+                    let shadow_ray = Ray {
+                        origin: hit.point,
+                        direction: shadow_ray_dir / distance};
+                    if world.hit(&shadow_ray, 0.001, distance + 0.001).is_some() {
+                        0.0
+                    } else {
+                        intensity * light_attenuation
+                    }
+                },
+                None => 0.0
+            };
 
             // Bounce the ray.
             match hit.material.scatter(&ray, &hit, rng) {
                 // The material can be scattered.
                 Option::Some(scatter) => {
-                    let c = color(scatter.scattered, world, rng, depth + 1);
+                    let c = color(scatter.scattered, world, lights, rng, depth + 1);
                     Vec3::new(
-                        light_value + scatter.attenuation.x * c.x,
-                        light_value + scatter.attenuation.y * c.y,
-                        light_value + scatter.attenuation.z * c.z)
+                        direct_lighting + scatter.attenuation.x * c.x,
+                        direct_lighting + scatter.attenuation.y * c.y,
+                        direct_lighting + scatter.attenuation.z * c.z)
                 }
                 // The material cannot be scattered.
                 Option::None => {
