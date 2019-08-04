@@ -3,59 +3,9 @@
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout (rgba8, binding = 0) writeonly uniform highp image2D destTex;
 
-//
-// A ray.
-//
-
-struct Ray {
-    vec3 origin;
-    vec3 direction;
-};
-
-
-//
-// Rendering procedures declarations.
-//
-
-vec3 color(Ray r);
-float hit_sphere(vec3 center, float radius, Ray r);
-
-
-//
-// Rendering procedures definitions.
-//
-
-// Compute the color for a given ray.
-vec3 color(Ray r)
-{
-    vec3 sphere_center = vec3(0.0, 0.0, -1.0);
-    float sphere_radius = 0.5;
-
-    float t = hit_sphere(sphere_center, sphere_radius, r);
-    if (t > 0.0)
-    {
-        vec3 n = normalize(r.origin + r.direction * t - vec3(0.0, 0.0, -1.0));
-        return n * 0.5 + 0.5;
-    }
-
-    vec3 dir = normalize(r.direction);
-    t = 0.5 * (dir.y + 1.0);
-    return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-}
-
-// Test intersection between a ray and a sphere.
-float hit_sphere(vec3 center, float radius, Ray r)
-{
-    vec3 oc = r.origin - center;
-    float a = dot(r.direction, r.direction);
-    float b = 2.0 * dot(oc, r.direction);
-    float c = dot(oc, oc) - radius * radius;
-    float discriminent = b * b - 4.0 * a * c;
-    if (discriminent < 0.0)
-        return -1.0;
-    else
-        return (-b - sqrt(discriminent)) / (2.0 * a);
-}
+@import ./includes/ray;
+@import ./includes/sphere;
+@import ./includes/shading;
 
 //
 // Main kernel.
