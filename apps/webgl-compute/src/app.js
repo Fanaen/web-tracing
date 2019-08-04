@@ -14,8 +14,8 @@ const script = async () => {
   
   // Canvas setup.
   const canvas = document.querySelector("#glCanvas");
-  const width = canvas.width = 2000;
-  const height = canvas.height = 1000;
+  const width = canvas.width = 1000;
+  const height = canvas.height = 500;
   console.log("Canvas dimensions: ", width, height);
   
   // Create WebGL2ComputeRenderingContext
@@ -46,7 +46,7 @@ const script = async () => {
   //
 
   vec3 color(Ray r);
-  bool hit_sphere(vec3 center, float radius, Ray r);
+  float hit_sphere(vec3 center, float radius, Ray r);
 
 
   //
@@ -59,25 +59,30 @@ const script = async () => {
     vec3 sphere_center = vec3(0.0, 0.0, -1.0);
     float sphere_radius = 0.5;
 
-    if (hit_sphere(sphere_center, sphere_radius, r))
+    float t = hit_sphere(sphere_center, sphere_radius, r);
+    if (t > 0.0)
     {
-      return vec3(1.0, 0.0, 0.0);
+      vec3 n = normalize(r.origin + r.direction * t - vec3(0.0, 0.0, -1.0));
+      return n * 0.5 + 0.5;
     }
 
     vec3 dir = normalize(r.direction);
-    float t = 0.5 * (dir.y + 1.0);
+    t = 0.5 * (dir.y + 1.0);
     return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
   }
 
   // Test intersection between a ray and a sphere.
-  bool hit_sphere(vec3 center, float radius, Ray r)
+  float hit_sphere(vec3 center, float radius, Ray r)
   {
     vec3 oc = r.origin - center;
     float a = dot(r.direction, r.direction);
     float b = 2.0 * dot(oc, r.direction);
     float c = dot(oc, oc) - radius * radius;
     float discriminent = b * b - 4.0 * a * c;
-    return discriminent > 0.0;
+    if (discriminent < 0.0)
+      return -1.0;
+    else
+      return (-b - sqrt(discriminent)) / (2.0 * a);
   }
 
   //
