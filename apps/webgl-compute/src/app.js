@@ -10,17 +10,62 @@
 // - https://github.com/9ballsyndrome/WebGL_Compute_shader
 //
 
+var glm = require('glm-js');
+
 class Renderer {
   constructor() {
+    console.log('loaded glm-js version: ', glm.version);
+    
     this.RENDER_SEED = 1000;
     this.SPP = 1;
+    this.camera_position = glm.vec3(-0.0, -0.0, 3.0);
+    this.camera_rotation = glm.vec3(0.0, 180.0, 0.0);
+    this.camera_fov = 40.0;
+  }
+
+  attach_mouse_events(document) {
+    this.mouse_down = false;
+    this.mouse_right = false;
+    this.mouse_pos = glm.vec2(0.0);
+
+    document.addEventListener('mousedown', (e) => {
+      this.mouse_down = true;
+      this.mouse_right = e.button === 2;
+      this.mouse_pos = glm.vec2(e.clientX, e.clientY);
+    });
+
+    document.addEventListener('mouseup', (e) => {
+      this.mouse_down = false;
+      this.mouse_right = false;
+    });
+
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+
+    document.onmousemove = (e) => {
+      if (this.mouse_down && this.mouse_right)
+      {
+        const new_mouse_pos = glm.vec2(e.clientX, e.clientY);
+        this.camera_position.x += (new_mouse_pos.x - this.mouse_pos.x) * 0.005;
+        this.camera_position.y -= (new_mouse_pos.y - this.mouse_pos.y) * 0.005;
+        this.mouse_pos = new_mouse_pos;
+
+        this.render();
+      }
+    }
+
+    document.addEventListener('wheel', (e) => {
+      this.camera_fov += e.deltaY * 0.01;
+      this.render();
+    });
   }
 
   render() {
     // Canvas setup.
     const canvas = document.querySelector("#glCanvas");
-    const width = canvas.width = 400;
-    const height = canvas.height = 200;
+    const width = canvas.width = 1400;
+    const height = canvas.height = 600;
     console.log("Canvas dimensions: ", width, height);
     
     // Create WebGL2ComputeRenderingContext
@@ -57,6 +102,8 @@ class Renderer {
     // Configure uniforms.
     const rngLoc = context.getUniformLocation(computeProgram, "uInitialSeed");
     const sppLoc = context.getUniformLocation(computeProgram, "uSamplesPerPixel");
+    const cameraToWordLoc = context.getUniformLocation(computeProgram, "uCameraToWorld");
+    const cameraInverseProjectionLoc = context.getUniformLocation(computeProgram, "uCameraInverseProjection");
     
     // Create text texture for ComputeShader write to.
     const texture = context.createTexture();
@@ -68,11 +115,21 @@ class Renderer {
     const frameBuffer = context.createFramebuffer();
     context.bindFramebuffer(context.READ_FRAMEBUFFER, frameBuffer);
     context.framebufferTexture2D(context.READ_FRAMEBUFFER, context.COLOR_ATTACHMENT0, context.TEXTURE_2D, texture, 0);
-    
+
+    // Configure the camera.
+    const camera_perspective = glm.perspective(glm.radians(this.camera_fov), width / height, 0.1, 100.0);
+    const inverse_camera_perspective = glm.inverse(camera_perspective);
+    const camera_world_matrix = glm.translate(glm.mat4(), this.camera_position);
+      //* glm.rotate(this.camera_rotation.x, glm.vec3(1.0, 0.0, 0.0))
+      //* glm.rotate(this.camera_rotation.y, glm.vec3(0.0, 1.0, 0.0))
+      //* glm.rotate(this.camera_rotation.z, glm.vec3(0.0, 0.0, 1.0));
+
     // Execute the ComputeShader.
     context.useProgram(computeProgram);
     context.uniform1f(rngLoc, this.RENDER_SEED);
     context.uniform1i(sppLoc, this.SPP);
+    context.uniformMatrix4fv(cameraInverseProjectionLoc, false, inverse_camera_perspective.elements);
+    context.uniformMatrix4fv(cameraToWordLoc, false, camera_world_matrix.elements);
     context.dispatchCompute(width / 16, height / 16, 1);
     context.memoryBarrier(context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -87,6 +144,7 @@ class Renderer {
 const script = async () => {
   let renderer = new Renderer();
   window.renderer = renderer;
+  renderer.attach_mouse_events(window.document);
   renderer.render();
 };
 

@@ -11,6 +11,22 @@ layout (rgba8, binding = 0) writeonly uniform highp image2D destTex;
 
 uniform float uInitialSeed;
 uniform int uSamplesPerPixel;
+uniform mat4 uCameraToWorld;
+uniform mat4 uCameraInverseProjection;
+
+Ray create_camera_ray(vec2 uv)
+{
+    vec3 origin = (uCameraToWorld * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+
+    vec3 direction = (uCameraInverseProjection * vec4(uv, 0.0, 1.0)).xyz;
+    direction = (uCameraToWorld * vec4(direction, 0.0)).xyz;
+    direction = normalize(direction);
+
+    Ray res;
+    res.origin = origin;
+    res.direction = direction;
+    return res;
+}
 
 //
 // Main kernel.
@@ -28,24 +44,15 @@ void main() {
     vec2 uv = vec2(storePos) / vec2(imageSize);
     float seed = uInitialSeed;
 
-    // Configure a camera.
-    vec3 lower_left_corner = vec3(-2.0, -1.0, -1.0);
-    vec3 horizontal = vec3(4.0, 0.0, 0.0);
-    vec3 vertical = vec3(0.0, 2.0, 0.0);
-    vec3 origin = vec3(0.0, 0.0, 0.0);
-
     vec3 finalColor = vec3(0.0);
 
     // Anti-aliasing loop.
     for (int s = 0; s < uSamplesPerPixel; ++s)
     {
         vec2 sample_pos = (vec2(storePos) + rand2(seed, uv)) / vec2(imageSize);
-        //finalColor = vec3(sample_pos, 0.0);
 
         // Generate a camera ray.
-        Ray r;
-        r.origin = origin;
-        r.direction = lower_left_corner + sample_pos.x * horizontal + sample_pos.y * vertical;
+        Ray r = create_camera_ray(sample_pos);
 
         // Shade the sample.
         finalColor += color(r);
