@@ -9,7 +9,8 @@ layout (rgba8, binding = 0) writeonly uniform highp image2D destTex;
 @import ./includes/sphere;
 @import ./includes/shading;
 
-uniform float initialSeed;
+uniform float uInitialSeed;
+uniform int uSamplesPerPixel;
 
 //
 // Main kernel.
@@ -25,7 +26,7 @@ void main() {
     ivec2 storePos = ivec2(gl_GlobalInvocationID.xy);
     ivec2 imageSize = ivec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
     vec2 uv = vec2(storePos) / vec2(imageSize);
-    float seed = initialSeed;
+    float seed = uInitialSeed;
 
     // Configure a camera.
     vec3 lower_left_corner = vec3(-2.0, -1.0, -1.0);
@@ -33,13 +34,25 @@ void main() {
     vec3 vertical = vec3(0.0, 2.0, 0.0);
     vec3 origin = vec3(0.0, 0.0, 0.0);
 
-    // Generate a camera ray.
-    Ray r;
-    r.origin = origin;
-    r.direction = lower_left_corner + uv.x * horizontal + uv.y * vertical;
+    vec3 finalColor = vec3(0.0);
+
+    // Anti-aliasing loop.
+    for (int s = 0; s < uSamplesPerPixel; ++s)
+    {
+        vec2 sample_pos = (vec2(storePos) + rand2(seed, uv)) / vec2(imageSize);
+        //finalColor = vec3(sample_pos, 0.0);
+
+        // Generate a camera ray.
+        Ray r;
+        r.origin = origin;
+        r.direction = lower_left_corner + sample_pos.x * horizontal + sample_pos.y * vertical;
+
+        // Shade the sample.
+        finalColor += color(r);
+    }
 
     // Shade the pixel.
-    vec3 finalColor = color(r);
+    finalColor /= float(uSamplesPerPixel);
 
     // Write the pixel.
     imageStore(destTex, storePos, vec4(finalColor, 1.0));

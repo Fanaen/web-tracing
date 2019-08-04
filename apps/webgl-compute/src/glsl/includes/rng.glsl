@@ -12,3 +12,8 @@ float rand(inout float seed, vec2 pixel)
     seed += 1.0f;
     return result;
 }
+
+vec2 rand2(inout float seed, vec2 pixel)
+{
+    return vec2(rand(seed, pixel), rand(seed, pixel));
+}

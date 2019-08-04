@@ -13,6 +13,7 @@
 class Renderer {
   constructor() {
     this.RENDER_SEED = 1000;
+    this.SPP = 1;
   }
 
   render() {
@@ -54,7 +55,8 @@ class Renderer {
     }
 
     // Configure uniforms.
-    const rngLoc = context.getUniformLocation(computeProgram, "initialSeed");
+    const rngLoc = context.getUniformLocation(computeProgram, "uInitialSeed");
+    const sppLoc = context.getUniformLocation(computeProgram, "uSamplesPerPixel");
     
     // Create text texture for ComputeShader write to.
     const texture = context.createTexture();
@@ -70,6 +72,7 @@ class Renderer {
     // Execute the ComputeShader.
     context.useProgram(computeProgram);
     context.uniform1f(rngLoc, this.RENDER_SEED);
+    context.uniform1i(sppLoc, this.SPP);
     context.dispatchCompute(width / 16, height / 16, 1);
     context.memoryBarrier(context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
