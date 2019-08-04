@@ -14,4 +14,13 @@ module.exports = [
         plugins: [
             new CopyWebpackPlugin(['src/index.html'])
         ],
-    }]
+        module: {
+            rules: [
+                {
+                    test: /\.glsl$/,
+                    use: 'webpack-glsl-loader'
+                }
+            ],
+        },
+    }
+]
