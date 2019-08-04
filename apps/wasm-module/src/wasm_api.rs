@@ -206,6 +206,51 @@ impl Context {
         self.pathtracer.world.remove(id);
     }
 
+    pub fn add_model(&mut self, id: u32, x: f32, y: f32, z: f32,
+                     vertices: Vec<f32>,
+                     triangles: Vec<u16>) {
+        self.remove_model(id);
+        let pos = Vec3::new(x, y, z);
+        for vertex in vertices.chunks(9) {
+            assert_eq!(vertex.len(), 9);
+            self.pathtracer.world.add(Triangle::new(
+                id,
+                Vec3::new(vertex[0], vertex[1],vertex[2]),
+                Vec3::new(vertex[3], vertex[4],vertex[5]),
+                Vec3::new(vertex[6], vertex[7],vertex[8]),
+                LambertianMaterial {
+                    albedo: Vec3::new(0.5, 0.5, 0.5),
+                }.into(),
+            ).into());
+        }
+        log(self.pathtracer.world.stats().as_str());
+//        for triangle in triangles.chunks(3) {
+//            assert_eq!(triangle.len(), 3);
+//            self.pathtracer.world.add(Triangle::new(
+//                id,
+//                extract_triangle(&vertices, triangle[0]),
+//                extract_triangle(&vertices, triangle[1]),
+//                extract_triangle(&vertices, triangle[2]),
+//                LambertianMaterial {
+//                    albedo: Vec3::new(0.5, 0.5, 0.5),
+//                }.into(),
+//            ).into());
+//        }
+    }
+
+    pub fn update_model(&mut self, id: u32, x: f32, y: f32, z: f32,
+                        vertices: Vec<f32>,
+                        triangles: Vec<u16>) -> bool {
+        self.remove_model(id);
+        self.add_model(id, x, y, z, vertices, triangles);
+        log(self.pathtracer.world.stats().as_str());
+        true
+    }
+
+    pub fn remove_model(&mut self, id: u32) {
+        self.pathtracer.world.remove(id);
+    }
+
     pub fn set_lambert(&mut self, id: u32, r: u32, g: u32, b: u32) -> bool {
         if let Some(shape) = self.pathtracer.world.find(id) {
 
@@ -228,6 +273,15 @@ impl Context {
             false
         }
     }
+}
+
+fn extract_triangle(vertices: &Vec<f32>, index: u16) -> Vec3 {
+    let index = index as usize;
+    Vec3::new(
+        vertices[index],
+        vertices[index + 1],
+        vertices[index + 2],
+    )
 }
 
 /// Wraps around the Vec3 struct from nalgebra for wasm-bindgen
@@ -256,4 +310,22 @@ impl Into<Vec3> for Vector3 {
     fn into(self) -> Vec3 {
         Vec3::new(self.x, self.y, self.z)
     }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    // Use `js_namespace` here to bind `console.log(..)` instead of just
+    // `log(..)`
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+
+    // The `console.log` is quite polymorphic, so we can bind it with multiple
+    // signatures. Note that we need to use `js_name` to ensure we always call
+    // `log` in JS.
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn log_u32(a: u32);
+
+    // Multiple arguments too!
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn log_many(a: &str, b: &str);
 }

@@ -6,6 +6,7 @@
   <script src="../src/components/sphere.js"></script>
   <script src="../src/components/triangle.js"></script>
   <script src="../src/components/light.js"></script>
+  <script src="../src/components/model.js"></script>
   <link href="src/style.css" rel="stylesheet">
   <link rel="stylesheet" href="../node_modules/@fortawesome/fontawesome-free/css/all.css">
 </head>
@@ -28,6 +29,7 @@
     </div>
   </div>
   <a-scene inspector="url: http://localhost:8080/node_modules/aframe-inspector/dist/aframe-inspector.js" vr-mode-ui="enabled: false">
+
     <a-entity id="main-camera" position="0 1.25 0" camera look-controls wasd-controls></a-entity>
     <a-sphere position="0 1.25 -7" radius="1.25" color="#EF2D5E" rendered-sphere=""></a-sphere>
 
@@ -38,6 +40,15 @@
     <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
     <a-sky color="#ECECEC"></a-sky>
     <a-entity light="color: #AFA; intensity: 1.0; type: point;" position="0.0 1.5 -2.0" rendered-light=""></a-entity>
+
+    <a-assets>
+      <a-asset-item id="helmet" src="../../models/cube.glb"></a-asset-item>
+      <a-asset-item id="obj" src="../../models/quad.obj"></a-asset-item>
+    </a-assets>
+
+    <a-entity gltf-model="#helmet" position="-3 1.25 -7" rendered-model=""></a-entity>
+
+<!--    <a-entity obj-model="obj: #obj" position="0 0 0" rendered-model=""></a-entity>-->
   </a-scene>
   <canvas id="web-tracing-fullscreen-canvas" class="hidden" width="100vw" height="100vh"></canvas>
   <script src="bootstrap.js"></script>

@@ -72,6 +72,14 @@ window.onblur = function() {
 const samplePerPixelInput = document.getElementById('sample-per-pixel');
 const tileSizeInput = document.getElementById('tile-size');
 
+function drawFirstRender(cameraEntity, currentCanvas, currentCtx) {
+    if (wasm.setCamera(cameraEntity)) {
+        wasm.draw(currentCtx, parseInt(tileSizeInput.value), currentCanvas.width, currentCanvas.height);
+    } else {
+        setTimeout(() => drawFirstRender(cameraEntity, currentCanvas, currentCtx), 10);
+    }
+}
+
 // -- Path tracing --
 function updateCanvas() {
     const currentCtx = isExpanded ? fullscreenCtx : ctx;
@@ -88,8 +96,7 @@ function updateCanvas() {
             sample_per_pixel: parseInt(samplePerPixelInput.value)
         });
         const cameraEntity = document.getElementById('main-camera');
-        wasm.setCamera(cameraEntity);
-        wasm.draw(currentCtx, parseInt(tileSizeInput.value), currentCanvas.width, currentCanvas.height);
+        drawFirstRender(cameraEntity, currentCanvas, currentCtx);
     }
 }
 

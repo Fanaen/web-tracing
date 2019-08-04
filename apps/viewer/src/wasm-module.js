@@ -191,19 +191,23 @@ export function draw(ctx, tile_size, width, height) {
 export function setCamera(cameraEntity) {
     const components = cameraEntity.components;
     const worldCameraObject = cameraEntity.object3D;
-    const camera = components.camera.camera;
-    const position = worldCameraObject.position;
-    const rotation = worldCameraObject.rotation.toVector3();
-    const fov = camera.fov;
+    if (components.camera) {
+        const camera = components.camera.camera;
+        const position = worldCameraObject.position;
+        const rotation = worldCameraObject.rotation.toVector3();
+        const fov = camera.fov;
 
-    const message = {
-        type: 'set_camera',
-        position,
-        rotation,
-        fov
-    };
+        const message = {
+            type: 'set_camera',
+            position,
+            rotation,
+            fov
+        };
 
-    workerPool.sendToEveryone(message);
+        workerPool.sendToEveryone(message);
+        return true;
+    }
+    return false;
 }
 
 export function setRenderingSettings(settings) {
@@ -266,4 +270,23 @@ export function removeTriangle(id) {
         id
     });
 
+}
+
+export function addModel(id, data) {
+    data.type = 'add_model';
+    data.id = id;
+    workerPool.sendToEveryone(data);
+}
+
+export function updateModel(id, data) {
+    data.type = 'update_model';
+    data.id = id;
+    workerPool.sendToEveryone(data);
+}
+
+export function removeModel(id) {
+    workerPool.sendToEveryone({
+        type: 'remove_model',
+        id
+    });
 }

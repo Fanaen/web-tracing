@@ -62,4 +62,18 @@ impl HitableList {
 
         closest_hit
     }
+
+    pub fn stats(&self) -> String {
+        let mut spheres = 0;
+        let mut triangles = 0;
+
+        for shape in &self.list {
+            match *shape {
+                HitableShape::Sphere(_) => spheres = spheres + 1,
+                HitableShape::Triangle(_) => triangles = triangles + 1,
+            }
+        }
+
+        format!("{} shapes:\n * {} spheres\n * {} triangles", self.list.len(), spheres, triangles)
+    }
 }

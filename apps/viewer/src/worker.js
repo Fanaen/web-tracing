@@ -140,6 +140,30 @@ import('../../wasm-module/pkg').then(wasm => {
                 case 'remove_triangle':
                     renderingContext.remove_triangle(call.id);
                     break;
+
+                case 'add_model':
+                    renderingContext.add_model(
+                        call.id,
+                        call.position.x,
+                        call.position.y,
+                        call.position.z,
+                        call.vertices,
+                        call.triangles);
+                    break;
+
+                case 'update_model':
+                    renderingContext.update_model(
+                        call.id,
+                        call.position.x,
+                        call.position.y,
+                        call.position.z,
+                        call.vertices,
+                        call.triangles);
+                    break;
+
+                case 'remove_model':
+                    renderingContext.remove_model(call.id);
+                    break;
             }
         } catch(e) {
             console.error('Error in worker', e);

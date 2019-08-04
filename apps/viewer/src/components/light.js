@@ -17,8 +17,6 @@ function convertHex(hex,alpha){
 }
 
 function getLightProperties(component) {
-    console.log("Get light properties.");
-    console.log(component);
     return {
         position: component.el.object3D.position,
         intensity: 1.0
@@ -29,7 +27,6 @@ function getLightProperties(component) {
 AFRAME.registerComponent('rendered-light', {
     schema: {},
     init: function () {
-        console.log("Light init.");
         this.objectId = window.objectId++;
 
         const position = this.el.object3D.position;
@@ -37,7 +34,6 @@ AFRAME.registerComponent('rendered-light', {
         accessWebtracing(wasm => wasm.createOrEditLight(this.objectId, getLightProperties(this)));
     },
     update: function () {
-        console.log("Light update.");
         const position = this.el.object3D.position;
         this.lastPosition = { x: position.x, y: position.y, z: position.z };
         accessWebtracing(wasm => wasm.createOrEditLight(this.objectId, getLightProperties(this)));
@@ -54,7 +50,6 @@ AFRAME.registerComponent('rendered-light', {
         }
     },
     remove: function () {
-        console.log("Light remove.");
         accessWebtracing(wasm => wasm.removeLight(this.objectId));
     },
     pause: function () {},
