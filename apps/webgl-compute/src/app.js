@@ -21,6 +21,8 @@ class Renderer {
     this.camera_position = glm.vec3(-0.0, -0.0, 3.0);
     this.camera_rotation = glm.vec3(0.0, 180.0, 0.0);
     this.camera_fov = 40.0;
+    this.frame_width = 500;
+    this.frame_height = 250;
   }
 
   attach_mouse_events(document) {
@@ -64,9 +66,8 @@ class Renderer {
   render() {
     // Canvas setup.
     const canvas = document.querySelector("#glCanvas");
-    const width = canvas.width = 1400;
-    const height = canvas.height = 600;
-    console.log("Canvas dimensions: ", width, height);
+    canvas.width = this.frame_width;
+    canvas.height = this.frame_height;
     
     // Create WebGL2ComputeRenderingContext
     const context = canvas.getContext('webgl2-compute', { antialias: false });
@@ -108,7 +109,7 @@ class Renderer {
     // Create text texture for ComputeShader write to.
     const texture = context.createTexture();
     context.bindTexture(context.TEXTURE_2D, texture);
-    context.texStorage2D(context.TEXTURE_2D, 1, context.RGBA8, width, height);
+    context.texStorage2D(context.TEXTURE_2D, 1, context.RGBA8, this.frame_width, this.frame_height);
     context.bindImageTexture(0, texture, 0, false, 0, context.WRITE_ONLY, context.RGBA8);
     
     // Create frameBuffer to read from texture.
@@ -117,7 +118,7 @@ class Renderer {
     context.framebufferTexture2D(context.READ_FRAMEBUFFER, context.COLOR_ATTACHMENT0, context.TEXTURE_2D, texture, 0);
 
     // Configure the camera.
-    const camera_perspective = glm.perspective(glm.radians(this.camera_fov), width / height, 0.1, 100.0);
+    const camera_perspective = glm.perspective(glm.radians(this.camera_fov), this.frame_width / this.frame_height, 0.1, 100.0);
     const inverse_camera_perspective = glm.inverse(camera_perspective);
     const camera_world_matrix = glm.translate(glm.mat4(), this.camera_position);
       //* glm.rotate(this.camera_rotation.x, glm.vec3(1.0, 0.0, 0.0))
@@ -130,13 +131,13 @@ class Renderer {
     context.uniform1i(sppLoc, this.SPP);
     context.uniformMatrix4fv(cameraInverseProjectionLoc, false, inverse_camera_perspective.elements);
     context.uniformMatrix4fv(cameraToWordLoc, false, camera_world_matrix.elements);
-    context.dispatchCompute(width / 16, height / 16, 1);
+    context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
     context.memoryBarrier(context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     // show computed texture to Canvas
     context.blitFramebuffer(
-      0, 0, width, height,
-      0, 0, width, height,
+      0, 0, this.frame_width, this.frame_height,
+      0, 0, this.frame_width, this.frame_height,
       context.COLOR_BUFFER_BIT, context.NEAREST);
   }
 };
