@@ -3,9 +3,13 @@
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout (rgba8, binding = 0) writeonly uniform highp image2D destTex;
 
+@import ./includes/math;
+@import ./includes/rng;
 @import ./includes/ray;
 @import ./includes/sphere;
 @import ./includes/shading;
+
+uniform float initialSeed;
 
 //
 // Main kernel.
@@ -21,6 +25,7 @@ void main() {
     ivec2 storePos = ivec2(gl_GlobalInvocationID.xy);
     ivec2 imageSize = ivec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
     vec2 uv = vec2(storePos) / vec2(imageSize);
+    float seed = initialSeed;
 
     // Configure a camera.
     vec3 lower_left_corner = vec3(-2.0, -1.0, -1.0);
