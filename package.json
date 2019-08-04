@@ -8,9 +8,11 @@
     "build:wasm-module": "wasm-pack build ./apps/wasm-module/",
     "build:server": "cargo build --manifest-path=./apps/server/Cargo.toml",
     "build:viewer": "yarn --cwd ./apps/viewer build",
+    "build:webgl-compute": "yarn --cwd ./apps/webgl-compute build",
 
     "run:server": "cargo run --manifest-path=./apps/server/Cargo.toml",
     "run:viewer": "yarn --cwd ./apps/viewer start",
+    "run:webgl-compute": "yarn --cwd ./apps/webgl-compute start",
 
     "test:wasm-module": "wasm-pack test ./apps/wasm-module/ --firefox",
 
