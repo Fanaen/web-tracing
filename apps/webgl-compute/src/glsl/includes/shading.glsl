@@ -2,13 +2,22 @@
 // Compute the color for a given ray.
 vec3 color(Ray r)
 {
-    vec3 sphere_center = vec3(0.0, 0.0, -1.0);
-    float sphere_radius = 0.5;
+    Sphere sphere_min;
+    float t_min = -1.0;
+    float t = 0.0;
+    for (int i = 0, e = spheres.length(); i < e; ++i)
+    {
+        if (hit_sphere(spheres[i].center, spheres[i].radius, r, t) && (t < t_min || t_min == -1.0))
+        {
+            t_min = t;
+            sphere_min = spheres[i];
+        }
+    }
+    t = t_min;
 
-    float t = hit_sphere(sphere_center, sphere_radius, r);
     if (t > 0.0)
     {
-        vec3 n = normalize(ray_at(r, t) - vec3(0.0, 0.0, -1.0));
+        vec3 n = normalize(ray_at(r, t) - sphere_min.center);
         return n * 0.5 + 0.5;
     }
 

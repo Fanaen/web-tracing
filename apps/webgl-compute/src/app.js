@@ -23,6 +23,7 @@ class Renderer {
     this.camera_fov = 40.0;
     this.frame_width = 500;
     this.frame_height = 250;
+    this.spheres = [glm.vec4(0.0, 0.0, -1.0, 0.5)]
   }
 
   attach_mouse_events(document) {
@@ -76,8 +77,6 @@ class Renderer {
       return;
     }
 
-    console.log("webgl2 compute context started correctly.");
-    
     // ComputeShader source
     // language=GLSL
     const computeShaderSource = require('./glsl/compute.glsl');
@@ -105,6 +104,23 @@ class Renderer {
     const sppLoc = context.getUniformLocation(computeProgram, "uSamplesPerPixel");
     const cameraToWordLoc = context.getUniformLocation(computeProgram, "uCameraToWorld");
     const cameraInverseProjectionLoc = context.getUniformLocation(computeProgram, "uCameraInverseProjection");
+
+    // Create a buffer for the scene.
+    const spheres_buffer = new Float32Array(this.spheres.length * 4);
+    for (var i = 0, e = this.spheres.length; i < e; ++i)
+    {
+      const sphere = this.spheres[i];
+      const gpuBufferIndex = i * 4;
+      spheres_buffer[gpuBufferIndex] = sphere.x;
+      spheres_buffer[gpuBufferIndex + 1] = sphere.y;
+      spheres_buffer[gpuBufferIndex + 2] = sphere.z;
+      spheres_buffer[gpuBufferIndex + 3] = sphere.w;
+    }
+    
+    const spheres = context.createBuffer();
+    context.bindBuffer(context.SHADER_STORAGE_BUFFER, spheres);
+    context.bufferData(context.SHADER_STORAGE_BUFFER, this.spheres.length * 4 * 4, context.STATIC_DRAW);
+    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, spheres_buffer);
     
     // Create text texture for ComputeShader write to.
     const texture = context.createTexture();
@@ -127,6 +143,10 @@ class Renderer {
 
     // Execute the ComputeShader.
     context.useProgram(computeProgram);
+
+    let index = context.getProgramResourceIndex(computeProgram, context.SHADER_STORAGE_BLOCK, "Scene");
+    let bind = context.getProgramResource(computeProgram, context.SHADER_STORAGE_BLOCK, index, [context.BUFFER_BINDING,])[0];
+    context.bindBufferBase(context.SHADER_STORAGE_BUFFER, bind, spheres);
     context.uniform1f(rngLoc, this.RENDER_SEED);
     context.uniform1i(sppLoc, this.SPP);
     context.uniformMatrix4fv(cameraInverseProjectionLoc, false, inverse_camera_perspective.elements);
