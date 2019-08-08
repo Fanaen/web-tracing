@@ -1,16 +1,13 @@
 
 // Test intersection between a ray and a triangle using Möller–Trumbore algorithm.
-bool hit_triangle_mt(Ray r, out float t)
+bool hit_triangle_mt(Ray r, vec3 v0, vec3 v1, vec3 v2, out float t)
 {
-    vec3 v0 = vec3(0.0, 0.0, -5.0);
-    vec3 v1 = vec3(0.0, 1.0, -5.0);
-    vec3 v2 = vec3(2.0, 1.0, -5.0);
     vec3 e1 = v1 - v0;
     vec3 e2 = v2 - v0;
     vec3 h = cross(r.direction, e2);
     float a = dot(e1, h);
 
-    if (a > -EPSILON && a < EPSILON)
+    if (a < EPSILON)
         return false;
 
     float f = 1.0 / a;

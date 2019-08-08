@@ -24,6 +24,18 @@ class Renderer {
     this.frame_width = 500;
     this.frame_height = 250;
     this.spheres = [glm.vec4(0.0, 0.0, -1.0, 0.5)]
+    this.vertices = [
+      glm.vec3(0.0, 0.0, -5.0),
+      glm.vec3(2.0, 1.0, -5.0),
+      glm.vec3(0.0, 1.0, -5.0),
+      glm.vec3(3.0, -1.0, -5.0),
+      glm.vec3(5.0, -1.0, -5.0),
+      glm.vec3(4.0, 2.0, -6.0),
+      glm.vec3(-5.0, -1.0, 5.0),
+      glm.vec3(5.0, -1.0, 5.0),
+      glm.vec3(0.0, -1.0, -5.0),
+    ];
+    this.triangles = [0, 1, 2];
   }
 
   attach_mouse_events(document) {
@@ -62,6 +74,52 @@ class Renderer {
       this.camera_fov += e.deltaY * 0.01;
       this.render();
     });
+  }
+
+  create_scene_buffer(context)
+  {
+    // Create spheres buffer.
+    const spheres_buffer = new Float32Array(this.spheres.length * 4);
+    for (var i = 0, e = this.spheres.length; i < e; ++i)
+    {
+      const sphere = this.spheres[i];
+      const gpuBufferIndex = i * 4;
+      spheres_buffer[gpuBufferIndex] = sphere.x;
+      spheres_buffer[gpuBufferIndex + 1] = sphere.y;
+      spheres_buffer[gpuBufferIndex + 2] = sphere.z;
+      spheres_buffer[gpuBufferIndex + 3] = sphere.w;
+    }
+    
+    this.spheres_buffer_id = context.createBuffer();
+    context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.spheres_buffer_id);
+    context.bufferData(context.SHADER_STORAGE_BUFFER, this.spheres.length * 4 * 4, context.STATIC_DRAW);
+    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, spheres_buffer);
+
+    // Create vertices buffer.
+    // We must pad to fit in vec4.
+    // https://stackoverflow.com/questions/29531237/memory-allocation-with-std430-qualifier 
+    const vertices_buffer = new Float32Array(this.vertices.length * 4);
+    for (var i = 0, e = this.vertices.length; i < e; ++i)
+    {
+      const vertice = this.vertices[i];
+      const gpuBufferIndex = i * 4;
+      vertices_buffer[gpuBufferIndex] = vertice.x;
+      vertices_buffer[gpuBufferIndex + 1] = vertice.y;
+      vertices_buffer[gpuBufferIndex + 2] = vertice.z;
+      vertices_buffer[gpuBufferIndex + 3] = 0.0;
+    }
+    
+    this.vertices_buffer_id = context.createBuffer();
+    context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.vertices_buffer_id);
+    context.bufferData(context.SHADER_STORAGE_BUFFER, this.vertices.length * 4 * 4, context.STATIC_DRAW);
+    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, vertices_buffer);
+  }
+
+  bindBuffer(context, compute_program, buffer_id, layout_name)
+  {
+    let index = context.getProgramResourceIndex(compute_program, context.SHADER_STORAGE_BLOCK, layout_name);
+    let bind = context.getProgramResource(compute_program, context.SHADER_STORAGE_BLOCK, index, [context.BUFFER_BINDING,])[0];
+    context.bindBufferBase(context.SHADER_STORAGE_BUFFER, bind, buffer_id);
   }
 
   render() {
@@ -106,21 +164,7 @@ class Renderer {
     const cameraInverseProjectionLoc = context.getUniformLocation(computeProgram, "uCameraInverseProjection");
 
     // Create a buffer for the scene.
-    const spheres_buffer = new Float32Array(this.spheres.length * 4);
-    for (var i = 0, e = this.spheres.length; i < e; ++i)
-    {
-      const sphere = this.spheres[i];
-      const gpuBufferIndex = i * 4;
-      spheres_buffer[gpuBufferIndex] = sphere.x;
-      spheres_buffer[gpuBufferIndex + 1] = sphere.y;
-      spheres_buffer[gpuBufferIndex + 2] = sphere.z;
-      spheres_buffer[gpuBufferIndex + 3] = sphere.w;
-    }
-    
-    const spheres = context.createBuffer();
-    context.bindBuffer(context.SHADER_STORAGE_BUFFER, spheres);
-    context.bufferData(context.SHADER_STORAGE_BUFFER, this.spheres.length * 4 * 4, context.STATIC_DRAW);
-    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, spheres_buffer);
+    this.create_scene_buffer(context);
     
     // Create text texture for ComputeShader write to.
     const texture = context.createTexture();
@@ -143,16 +187,16 @@ class Renderer {
 
     // Execute the ComputeShader.
     context.useProgram(computeProgram);
-
-    let index = context.getProgramResourceIndex(computeProgram, context.SHADER_STORAGE_BLOCK, "Scene");
-    let bind = context.getProgramResource(computeProgram, context.SHADER_STORAGE_BLOCK, index, [context.BUFFER_BINDING,])[0];
-    context.bindBufferBase(context.SHADER_STORAGE_BUFFER, bind, spheres);
+    this.bindBuffer(context, computeProgram, this.spheres_buffer_id, "Scene");
+    this.bindBuffer(context, computeProgram, this.vertices_buffer_id, "Vertices");
     context.uniform1f(rngLoc, this.RENDER_SEED);
     context.uniform1i(sppLoc, this.SPP);
     context.uniformMatrix4fv(cameraInverseProjectionLoc, false, inverse_camera_perspective.elements);
     context.uniformMatrix4fv(cameraToWordLoc, false, camera_world_matrix.elements);
     context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
     context.memoryBarrier(context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+
 
     // show computed texture to Canvas
     context.blitFramebuffer(
