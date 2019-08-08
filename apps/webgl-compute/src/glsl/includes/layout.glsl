@@ -19,3 +19,7 @@ layout (std430, binding = 1) readonly buffer Vertices {
     vec3 vertices[];
 };
 
+layout (std430, binding = 2) readonly buffer Triangles {
+    int triangles[];
+};
+

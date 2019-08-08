@@ -14,11 +14,11 @@ vec3 color(Ray r)
         }
     }
 
-    for (int i = 0, e = vertices.length(); i < e; i += 3)
+    for (int i = 0, e = triangles.length(); i < e; i += 3)
     {
-        vec3 v0 = vertices[i];
-        vec3 v1 = vertices[i + 1];
-        vec3 v2 = vertices[i + 2];
+        vec3 v0 = vertices[triangles[i]];
+        vec3 v1 = vertices[triangles[i + 1]];
+        vec3 v2 = vertices[triangles[i + 2]];
 
         if (hit_triangle_mt(r, v0, v1, v2, t) && (t < t_min || t_min == -1.0))
         {
