@@ -15,10 +15,12 @@ vec3 color(Ray r)
     }
     t = t_min;
 
-    if (t > 0.0)
+    //if (t > 0.0)
+    if (hit_triangle_mt(r, t))
     {
-        vec3 n = normalize(ray_at(r, t) - sphere_min.center);
-        return n * 0.5 + 0.5;
+        return vec3(1.0, 0.0, 0.0);
+        //vec3 n = normalize(ray_at(r, t) - sphere_min.center);
+        //return n * 0.5 + 0.5;
     }
 
     vec3 dir = normalize(r.direction);
