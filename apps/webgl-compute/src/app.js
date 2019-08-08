@@ -19,8 +19,8 @@ class Renderer {
     
     this.RENDER_SEED = 1000;
     this.SPP = 1;
-    this.camera_position = glm.vec3(-0.0, -0.0, 3.0);
-    this.camera_rotation = glm.vec3(0.0, 0.0, 0.0);
+    this.camera_position = glm.vec3(-2.9, -0.85, 14.0);
+    this.camera_rotation = glm.vec3(-0.8, -6.8, 0.0);
     this.camera_fov = 40.0;
     this.frame_width = 500;
     this.frame_height = 250;
@@ -72,6 +72,15 @@ class Renderer {
         const new_mouse_pos = glm.vec2(e.clientX, e.clientY);
         this.camera_position.x -= (new_mouse_pos.x - this.mouse_pos.x) * 0.005;
         this.camera_position.y += (new_mouse_pos.y - this.mouse_pos.y) * 0.005;
+        this.mouse_pos = new_mouse_pos;
+
+        this.render();
+      }
+      else if (this.mouse_down && !this.mouse_right)
+      {
+        const new_mouse_pos = glm.vec2(e.clientX, e.clientY);
+        this.camera_rotation.y += (new_mouse_pos.x - this.mouse_pos.x) * 0.005;
+        this.camera_rotation.x -= (new_mouse_pos.y - this.mouse_pos.y) * 0.002;
         this.mouse_pos = new_mouse_pos;
 
         this.render();
@@ -194,7 +203,10 @@ class Renderer {
     // Configure the camera.
     const camera_perspective = glm.perspective(glm.radians(this.camera_fov), this.frame_width / this.frame_height, 0.1, 100.0);
     const inverse_camera_perspective = glm.inverse(camera_perspective);
-    const camera_world_matrix = glm.translate(glm.mat4(), this.camera_position);
+    let camera_world_matrix = glm.mat4();
+    camera_world_matrix = glm.rotate(camera_world_matrix, this.camera_rotation.y, glm.vec3(0.0, -1.0, 0.0));
+    camera_world_matrix = glm.rotate(camera_world_matrix, this.camera_rotation.x, glm.vec3(1.0, 0.0, 0.0));
+    camera_world_matrix = glm.translate(camera_world_matrix, this.camera_position);
       //* glm.rotate(glm.matthis.camera_rotation.x, glm.vec3(1.0, 0.0, 0.0));
       //* glm.rotate(this.camera_rotation.y, glm.vec3(0.0, 1.0, 0.0))
       //* glm.rotate(this.camera_rotation.z, glm.vec3(0.0, 0.0, 1.0));
