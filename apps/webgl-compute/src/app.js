@@ -12,11 +12,12 @@
 //
 
 var glm = require('glm-js');
+import { bunny_vertices, bunny_triangles } from './bunny.js';
 
 class Renderer {
   constructor() {
     console.log('loaded glm-js version: ', glm.version);
-    
+
     this.RENDER_SEED = 1000;
     this.SPP = 1;
     this.camera_position = glm.vec3(-2.9, -0.85, 14.0);
@@ -24,6 +25,7 @@ class Renderer {
     this.camera_fov = 40.0;
     this.frame_width = 500;
     this.frame_height = 250;
+    /*
     this.spheres = [glm.vec4(0.0, 0.0, -1.0, 0.5)]
     this.vertices = [
       glm.vec3(0.0, 0.0, -5.0),
@@ -44,6 +46,24 @@ class Renderer {
       1, 0, 3,
       1, 5, 2,
     ];
+     */
+  }
+
+  init() {
+    // Canvas setup.
+    const canvas = document.querySelector("#glCanvas");
+    canvas.width = this.frame_width;
+    canvas.height = this.frame_height;
+
+    // Create WebGL2ComputeRenderingContext
+    this.context = canvas.getContext('webgl2-compute', { antialias: false });
+    if (!this.context) {
+      console.error("Cannot start webgl2 compute context.");
+      return;
+    }
+
+    // Create a buffer for the scene.
+    this.create_scene_buffer(this.context);
   }
 
   attach_mouse_events(document) {
@@ -96,6 +116,7 @@ class Renderer {
   create_scene_buffer(context)
   {
     // Create spheres buffer.
+    /*
     const spheres_buffer = new Float32Array(this.spheres.length * 4);
     for (var i = 0, e = this.spheres.length; i < e; ++i)
     {
@@ -111,10 +132,22 @@ class Renderer {
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.spheres_buffer_id);
     context.bufferData(context.SHADER_STORAGE_BUFFER, this.spheres.length * 4 * 4, context.STATIC_DRAW);
     context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, spheres_buffer);
+    */
 
     // Create vertices buffer.
     // We must pad to fit in vec4.
     // https://stackoverflow.com/questions/29531237/memory-allocation-with-std430-qualifier 
+    const vertices_buffer = new Float32Array(bunny_vertices.length + (bunny_vertices.length / 3) * 4);
+    for (var i = 0, e = bunny_vertices.length / 3; i < e; ++i)
+    {
+      const gpuBufferIndex = i * 4;
+      vertices_buffer[gpuBufferIndex] = bunny_vertices[gpuBufferIndex];
+      vertices_buffer[gpuBufferIndex + 1] = bunny_vertices[gpuBufferIndex + 1];
+      vertices_buffer[gpuBufferIndex + 2] = bunny_vertices[gpuBufferIndex + 2];
+      vertices_buffer[gpuBufferIndex + 3] = 0.0;
+
+    }
+    /*
     const vertices_buffer = new Float32Array(this.vertices.length * 4);
     for (var i = 0, e = this.vertices.length; i < e; ++i)
     {
@@ -125,17 +158,18 @@ class Renderer {
       vertices_buffer[gpuBufferIndex + 2] = vertice.z;
       vertices_buffer[gpuBufferIndex + 3] = 0.0;
     }
+    */
     
     this.vertices_buffer_id = context.createBuffer();
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.vertices_buffer_id);
-    context.bufferData(context.SHADER_STORAGE_BUFFER, this.vertices.length * 4 * 4, context.STATIC_DRAW);
+    context.bufferData(context.SHADER_STORAGE_BUFFER, vertices_buffer.length * 4, context.STATIC_DRAW);
     context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, vertices_buffer);
 
     // Create triangles buffer.
     this.triangles_buffer_id = context.createBuffer();
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.triangles_buffer_id);
-    context.bufferData(context.SHADER_STORAGE_BUFFER, this.triangles.length * 4, context.STATIC_DRAW);
-    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, new Int32Array(this.triangles));
+    context.bufferData(context.SHADER_STORAGE_BUFFER, bunny_triangles.length * 4, context.STATIC_DRAW);
+    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, new Int32Array(bunny_triangles));
   }
 
   bindBuffer(context, compute_program, buffer_id, layout_name)
@@ -146,15 +180,7 @@ class Renderer {
   }
 
   render() {
-    // Canvas setup.
-    const canvas = document.querySelector("#glCanvas");
-    canvas.width = this.frame_width;
-    canvas.height = this.frame_height;
-    
-    // Create WebGL2ComputeRenderingContext
-    const context = canvas.getContext('webgl2-compute', { antialias: false });
-    if (!context) {
-      console.error("Cannot start webgl2 compute context.");
+    if (!this.context) {
       return;
     }
 
@@ -163,42 +189,39 @@ class Renderer {
     const computeShaderSource = require('./glsl/compute.glsl');
 
     // Create WebGLShader for ComputeShader.
-    const computeShader = context.createShader(context.COMPUTE_SHADER);
-    context.shaderSource(computeShader, computeShaderSource);
-    context.compileShader(computeShader);
-    if (!context.getShaderParameter(computeShader, context.COMPILE_STATUS)) {
-      console.error(context.getShaderInfoLog(computeShader));
+    const computeShader = this.context.createShader(this.context.COMPUTE_SHADER);
+    this.context.shaderSource(computeShader, computeShaderSource);
+    this.context.compileShader(computeShader);
+    if (!this.context.getShaderParameter(computeShader, this.context.COMPILE_STATUS)) {
+      console.error(this.context.getShaderInfoLog(computeShader));
       return;
     }
 
     // Create WebGLProgram for ComputeShader.
-    const computeProgram = context.createProgram();
-    context.attachShader(computeProgram, computeShader);
-    context.linkProgram(computeProgram);
-    if (!context.getProgramParameter(computeProgram, context.LINK_STATUS)) {
-      console.error(context.getProgramInfoLog(computeProgram));
+    const computeProgram = this.context.createProgram();
+    this.context.attachShader(computeProgram, computeShader);
+    this.context.linkProgram(computeProgram);
+    if (!this.context.getProgramParameter(computeProgram, this.context.LINK_STATUS)) {
+      console.error(this.context.getProgramInfoLog(computeProgram));
       return;
     }
 
     // Configure uniforms.
-    const rngLoc = context.getUniformLocation(computeProgram, "uInitialSeed");
-    const sppLoc = context.getUniformLocation(computeProgram, "uSamplesPerPixel");
-    const cameraToWordLoc = context.getUniformLocation(computeProgram, "uCameraToWorld");
-    const cameraInverseProjectionLoc = context.getUniformLocation(computeProgram, "uCameraInverseProjection");
-
-    // Create a buffer for the scene.
-    this.create_scene_buffer(context);
+    const rngLoc = this.context.getUniformLocation(computeProgram, "uInitialSeed");
+    const sppLoc = this.context.getUniformLocation(computeProgram, "uSamplesPerPixel");
+    const cameraToWordLoc = this.context.getUniformLocation(computeProgram, "uCameraToWorld");
+    const cameraInverseProjectionLoc = this.context.getUniformLocation(computeProgram, "uCameraInverseProjection");
     
     // Create text texture for ComputeShader write to.
-    const texture = context.createTexture();
-    context.bindTexture(context.TEXTURE_2D, texture);
-    context.texStorage2D(context.TEXTURE_2D, 1, context.RGBA8, this.frame_width, this.frame_height);
-    context.bindImageTexture(0, texture, 0, false, 0, context.WRITE_ONLY, context.RGBA8);
+    const texture = this.context.createTexture();
+    this.context.bindTexture(this.context.TEXTURE_2D, texture);
+    this.context.texStorage2D(this.context.TEXTURE_2D, 1, this.context.RGBA8, this.frame_width, this.frame_height);
+    this.context.bindImageTexture(0, texture, 0, false, 0, this.context.WRITE_ONLY, this.context.RGBA8);
     
     // Create frameBuffer to read from texture.
-    const frameBuffer = context.createFramebuffer();
-    context.bindFramebuffer(context.READ_FRAMEBUFFER, frameBuffer);
-    context.framebufferTexture2D(context.READ_FRAMEBUFFER, context.COLOR_ATTACHMENT0, context.TEXTURE_2D, texture, 0);
+    const frameBuffer = this.context.createFramebuffer();
+    this.context.bindFramebuffer(this.context.READ_FRAMEBUFFER, frameBuffer);
+    this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, texture, 0);
 
     // Configure the camera.
     const camera_perspective = glm.perspective(glm.radians(this.camera_fov), this.frame_width / this.frame_height, 0.1, 100.0);
@@ -212,22 +235,22 @@ class Renderer {
       //* glm.rotate(this.camera_rotation.z, glm.vec3(0.0, 0.0, 1.0));
 
     // Execute the ComputeShader.
-    context.useProgram(computeProgram);
-    this.bindBuffer(context, computeProgram, this.spheres_buffer_id, "Scene");
-    this.bindBuffer(context, computeProgram, this.vertices_buffer_id, "Vertices");
-    this.bindBuffer(context, computeProgram, this.triangles_buffer_id, "Triangles");
-    context.uniform1f(rngLoc, this.RENDER_SEED);
-    context.uniform1i(sppLoc, this.SPP);
-    context.uniformMatrix4fv(cameraInverseProjectionLoc, false, inverse_camera_perspective.elements);
-    context.uniformMatrix4fv(cameraToWordLoc, false, camera_world_matrix.elements);
-    context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
-    context.memoryBarrier(context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    this.context.useProgram(computeProgram);
+    //this.bindBuffer(this.context, computeProgram, this.spheres_buffer_id, "Scene");
+    this.bindBuffer(this.context, computeProgram, this.vertices_buffer_id, "Vertices");
+    this.bindBuffer(this.context, computeProgram, this.triangles_buffer_id, "Triangles");
+    this.context.uniform1f(rngLoc, this.RENDER_SEED);
+    this.context.uniform1i(sppLoc, this.SPP);
+    this.context.uniformMatrix4fv(cameraInverseProjectionLoc, false, inverse_camera_perspective.elements);
+    this.context.uniformMatrix4fv(cameraToWordLoc, false, camera_world_matrix.elements);
+    this.context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
+    this.context.memoryBarrier(this.context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     // show computed texture to Canvas
-    context.blitFramebuffer(
+    this.context.blitFramebuffer(
       0, 0, this.frame_width, this.frame_height,
       0, 0, this.frame_width, this.frame_height,
-      context.COLOR_BUFFER_BIT, context.NEAREST);
+      this.context.COLOR_BUFFER_BIT, this.context.NEAREST);
   }
 };
 
@@ -235,6 +258,7 @@ const script = async () => {
   let renderer = new Renderer();
   window.renderer = renderer;
   renderer.attach_mouse_events(window.document);
+  renderer.init();
   renderer.render();
 };
 
