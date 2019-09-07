@@ -5,16 +5,6 @@ vec3 color(Ray r)
     float t_min = -1.0;
     float t = 0.0;
     vec3 n;
-    /*
-    for (int i = 0, e = spheres.length(); i < e; ++i)
-    {
-        if (hit_sphere(spheres[i].center, spheres[i].radius, r, t) && (t < t_min || t_min == -1.0))
-        {
-            t_min = t;
-            n = normalize(ray_at(r, t) - spheres[i].center);
-        }
-    }
-    */
 
     for (int i = 0, e = triangles.length(); i < e; i += 3)
     {

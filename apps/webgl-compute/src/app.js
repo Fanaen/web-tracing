@@ -12,7 +12,8 @@
 //
 
 var glm = require('glm-js');
-import { bunny_vertices, bunny_triangles } from './bunny.js';
+
+import { object_verticies, object_triangles } from './bunny.js';
 
 class Renderer {
   constructor() {
@@ -20,33 +21,11 @@ class Renderer {
 
     this.RENDER_SEED = 1000;
     this.SPP = 1;
-    this.camera_position = glm.vec3(-2.9, -0.85, 14.0);
-    this.camera_rotation = glm.vec3(-0.8, -6.8, 0.0);
+    this.camera_position = glm.vec3(-3.01, -0.53, 6.5);
+    this.camera_rotation = glm.vec3(0.98, -6.4, 0.0);
     this.camera_fov = 40.0;
     this.frame_width = 500;
     this.frame_height = 250;
-    /*
-    this.spheres = [glm.vec4(0.0, 0.0, -1.0, 0.5)]
-    this.vertices = [
-      glm.vec3(0.0, 0.0, -5.0),
-      glm.vec3(2.0, 1.0, -5.0),
-      glm.vec3(0.0, 1.0, -5.0),
-      glm.vec3(3.0, -1.0, -5.0),
-      glm.vec3(5.0, -1.0, -5.0),
-      glm.vec3(4.0, 2.0, -6.0),
-      glm.vec3(-5.0, -1.0, 5.0),
-      glm.vec3(5.0, -1.0, 5.0),
-      glm.vec3(0.0, -1.0, -5.0),
-    ];
-    this.triangles = [
-      0, 1, 2, 
-      3, 4, 5, 
-      6, 7, 8, 
-      1, 3, 5,
-      1, 0, 3,
-      1, 5, 2,
-    ];
-     */
   }
 
   init() {
@@ -115,50 +94,18 @@ class Renderer {
 
   create_scene_buffer(context)
   {
-    // Create spheres buffer.
-    /*
-    const spheres_buffer = new Float32Array(this.spheres.length * 4);
-    for (var i = 0, e = this.spheres.length; i < e; ++i)
-    {
-      const sphere = this.spheres[i];
-      const gpuBufferIndex = i * 4;
-      spheres_buffer[gpuBufferIndex] = sphere.x;
-      spheres_buffer[gpuBufferIndex + 1] = sphere.y;
-      spheres_buffer[gpuBufferIndex + 2] = sphere.z;
-      spheres_buffer[gpuBufferIndex + 3] = sphere.w;
-    }
-    
-    this.spheres_buffer_id = context.createBuffer();
-    context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.spheres_buffer_id);
-    context.bufferData(context.SHADER_STORAGE_BUFFER, this.spheres.length * 4 * 4, context.STATIC_DRAW);
-    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, spheres_buffer);
-    */
-
     // Create vertices buffer.
     // We must pad to fit in vec4.
     // https://stackoverflow.com/questions/29531237/memory-allocation-with-std430-qualifier 
-    const vertices_buffer = new Float32Array(bunny_vertices.length + (bunny_vertices.length / 3) * 4);
-    for (var i = 0, e = bunny_vertices.length / 3; i < e; ++i)
-    {
-      const gpuBufferIndex = i * 4;
-      vertices_buffer[gpuBufferIndex] = bunny_vertices[gpuBufferIndex];
-      vertices_buffer[gpuBufferIndex + 1] = bunny_vertices[gpuBufferIndex + 1];
-      vertices_buffer[gpuBufferIndex + 2] = bunny_vertices[gpuBufferIndex + 2];
-      vertices_buffer[gpuBufferIndex + 3] = 0.0;
+    const vertices_buffer = new Float32Array(object_verticies.length / 3 * 4);
 
-    }
-    /*
-    const vertices_buffer = new Float32Array(this.vertices.length * 4);
-    for (var i = 0, e = this.vertices.length; i < e; ++i)
+    for (var i = 0, e = object_verticies.length, gpu_i = 0; i < e; i += 3)
     {
-      const vertice = this.vertices[i];
-      const gpuBufferIndex = i * 4;
-      vertices_buffer[gpuBufferIndex] = vertice.x;
-      vertices_buffer[gpuBufferIndex + 1] = vertice.y;
-      vertices_buffer[gpuBufferIndex + 2] = vertice.z;
-      vertices_buffer[gpuBufferIndex + 3] = 0.0;
+      vertices_buffer[gpu_i++] = object_verticies[i];
+      vertices_buffer[gpu_i++] = object_verticies[i + 1];
+      vertices_buffer[gpu_i++] = object_verticies[i + 2];
+      vertices_buffer[gpu_i++] = 0.0;
     }
-    */
     
     this.vertices_buffer_id = context.createBuffer();
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.vertices_buffer_id);
@@ -168,8 +115,8 @@ class Renderer {
     // Create triangles buffer.
     this.triangles_buffer_id = context.createBuffer();
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.triangles_buffer_id);
-    context.bufferData(context.SHADER_STORAGE_BUFFER, bunny_triangles.length * 4, context.STATIC_DRAW);
-    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, new Int32Array(bunny_triangles));
+    context.bufferData(context.SHADER_STORAGE_BUFFER, object_triangles.length * 4, context.STATIC_DRAW);
+    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, new Int32Array(object_triangles));
   }
 
   bindBuffer(context, compute_program, buffer_id, layout_name)

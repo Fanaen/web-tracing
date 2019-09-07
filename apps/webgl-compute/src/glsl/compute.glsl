@@ -3,7 +3,6 @@ precision highp float;
 precision highp int;
 precision mediump image2DArray;
 
-@import ./includes/sphere;
 
 @import ./includes/layout;
 @import ./includes/uniform;
@@ -11,7 +10,6 @@ precision mediump image2DArray;
 @import ./includes/math;
 @import ./includes/rng;
 @import ./includes/ray;
-@import ./includes/sphere_intersection;
 @import ./includes/triangle_intersection;
 @import ./includes/shading;
 @import ./includes/camera;
