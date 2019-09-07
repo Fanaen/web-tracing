@@ -17,3 +17,13 @@ vec2 rand2(inout float seed, vec2 pixel)
 {
     return vec2(rand(seed, pixel), rand(seed, pixel));
 }
+
+// Generate a random direction in the unit sphere.
+vec3 rand3(inout float seed, vec2 pixel)
+{
+    vec3 p;
+    //do {
+        p = 2.0 * vec3(rand(seed, pixel), rand(seed, pixel), rand(seed, pixel)) - vec3(1.0);
+    //} while (length(p) > 1.0);
+    return normalize(p);
+}

@@ -1,10 +1,8 @@
-
-// Compute the color for a given ray.
-vec3 color(Ray r)
+bool hit_world(Ray r, inout float t, inout vec3 n)
 {
+    bool does_hit = false;
     float t_min = -1.0;
-    float t = 0.0;
-    vec3 n;
+    t = 0.0;
 
     for (int i = 0, e = triangles.length(); i < e; i += 3)
     {
@@ -16,17 +14,33 @@ vec3 color(Ray r)
         {
             t_min = t;
             n = normalize(cross(v1 - v0, v2 - v0));
+            does_hit = true;
         }
     }
 
+    return does_hit;
+}
 
-    t = t_min;
-    if (t > 0.0)
+// Compute the color for a given ray.
+vec3 color(Ray r, inout float seed, vec2 pixel)
+{
+    float t;
+    vec3 n;
+    int max_depth = 10;
+    int depth = 0;
+
+    float factor = 1.0;
+
+    while (depth < max_depth && hit_world(r, t, n) && t > 0.0)
     {
-        return n * 0.5 + 0.5;
+        r.origin = ray_at(r, t);
+        vec3 target = r.origin + n + rand3(seed, pixel);
+        r.direction = normalize(target - r.origin);
+        factor *= 0.5;
+        depth++;
     }
 
     vec3 dir = normalize(r.direction);
     t = 0.5 * (dir.y + 1.0);
-    return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+    return factor * ((1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0));
 }

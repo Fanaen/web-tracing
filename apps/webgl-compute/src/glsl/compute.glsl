@@ -41,7 +41,7 @@ void main() {
         Ray r = create_camera_ray(sample_pos);
 
         // Shade the sample.
-        finalColor += color(r);
+        finalColor += color(r, seed, uv);
     }
 
     // Shade the pixel.
