@@ -1,5 +1,5 @@
 
 uniform float uInitialSeed;
-uniform int uSamplesPerPixel;
+uniform int uSamples;
 uniform mat4 uCameraToWorld;
 uniform mat4 uCameraInverseProjection;

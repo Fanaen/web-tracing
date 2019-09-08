@@ -32,21 +32,31 @@ void main() {
 
     vec3 finalColor = vec3(0.0);
 
-    // Anti-aliasing loop.
-    for (int s = 0; s < uSamplesPerPixel; ++s)
+    vec2 sample_pos = (vec2(storePos) + rand2(seed, uv)) / vec2(imageSize);
+
+    // Generate a camera ray.
+    Ray r = create_camera_ray(sample_pos);
+
+    // Shade the sample.
+    finalColor += color(r, seed, uv);
+
+    // Fetch the previous pixel value.
+    vec4 initial = imageLoad(destTex, storePos);
+
+    // Merge this sample with previous samples.
+    vec4 color;
+    if (uSamples == 0)
     {
-        vec2 sample_pos = (vec2(storePos) + rand2(seed, uv)) / vec2(imageSize);
-
-        // Generate a camera ray.
-        Ray r = create_camera_ray(sample_pos);
-
-        // Shade the sample.
-        finalColor += color(r, seed, uv);
+        color = vec4(finalColor, 1.0);
+    }
+    else
+    {
+        float factor = 1.0 / (float(uSamples) + 1.0);
+        vec3 generated = finalColor * factor;
+        vec3 on_screen = initial.rgb * (1.0 - factor);
+        color = vec4(generated + on_screen, 1.0);
     }
 
-    // Shade the pixel.
-    finalColor /= float(uSamplesPerPixel);
-
     // Write the pixel.
-    imageStore(destTex, storePos, vec4(finalColor, 1.0));
+    imageStore(destTex, storePos, color);
 }

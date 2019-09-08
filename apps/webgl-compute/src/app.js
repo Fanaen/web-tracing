@@ -20,7 +20,7 @@ class Renderer {
     console.log('loaded glm-js version: ', glm.version);
 
     this.RENDER_SEED = 1000;
-    this.SPP = 8;
+    this.SPP = 0;
     this.camera_position = glm.vec3(-5.813, -0.187, 17.0);
     this.camera_rotation = glm.vec3(-0.208, -0.065, 0.0);
     this.camera_fov = 40.0;
@@ -72,6 +72,7 @@ class Renderer {
         this.camera_position.x -= (new_mouse_pos.x - this.mouse_pos.x) * 0.005;
         this.camera_position.y += (new_mouse_pos.y - this.mouse_pos.y) * 0.005;
         this.mouse_pos = new_mouse_pos;
+        this.SPP = 0;
 
         this.render();
       }
@@ -81,6 +82,7 @@ class Renderer {
         this.camera_rotation.y += (new_mouse_pos.x - this.mouse_pos.x) * 0.005;
         this.camera_rotation.x -= (new_mouse_pos.y - this.mouse_pos.y) * 0.002;
         this.mouse_pos = new_mouse_pos;
+        this.SPP = 0;
 
         this.render();
       }
@@ -88,6 +90,7 @@ class Renderer {
 
     document.addEventListener('wheel', (e) => {
       this.camera_position.z += e.deltaY * 0.005;
+      this.SPP = 0;
       this.render();
     });
   }
@@ -117,6 +120,9 @@ class Renderer {
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.triangles_buffer_id);
     context.bufferData(context.SHADER_STORAGE_BUFFER, object_triangles.length * 4, context.STATIC_DRAW);
     context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, new Int32Array(object_triangles));
+
+    // Create the texture into which the image will be rendered.
+    this.texture = this.context.createTexture();
   }
 
   bindBuffer(context, compute_program, buffer_id, layout_name)
@@ -132,7 +138,6 @@ class Renderer {
     }
 
     // ComputeShader source
-    // language=GLSL
     const computeShaderSource = require('./glsl/compute.glsl');
 
     // Create WebGLShader for ComputeShader.
@@ -155,20 +160,19 @@ class Renderer {
 
     // Configure uniforms.
     const rngLoc = this.context.getUniformLocation(computeProgram, "uInitialSeed");
-    const sppLoc = this.context.getUniformLocation(computeProgram, "uSamplesPerPixel");
+    const sppLoc = this.context.getUniformLocation(computeProgram, "uSamples");
     const cameraToWordLoc = this.context.getUniformLocation(computeProgram, "uCameraToWorld");
     const cameraInverseProjectionLoc = this.context.getUniformLocation(computeProgram, "uCameraInverseProjection");
     
-    // Create text texture for ComputeShader write to.
-    const texture = this.context.createTexture();
-    this.context.bindTexture(this.context.TEXTURE_2D, texture);
+    // Create texture for ComputeShader write to.
+    this.context.bindTexture(this.context.TEXTURE_2D, this.texture);
     this.context.texStorage2D(this.context.TEXTURE_2D, 1, this.context.RGBA8, this.frame_width, this.frame_height);
-    this.context.bindImageTexture(0, texture, 0, false, 0, this.context.WRITE_ONLY, this.context.RGBA8);
+    this.context.bindImageTexture(0, this.texture, 0, false, 0, this.context.READ_WRITE, this.context.RGBA8);
     
     // Create frameBuffer to read from texture.
     const frameBuffer = this.context.createFramebuffer();
     this.context.bindFramebuffer(this.context.READ_FRAMEBUFFER, frameBuffer);
-    this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, texture, 0);
+    this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, this.texture, 0);
 
     // Configure the camera.
     const camera_perspective = glm.perspective(glm.radians(this.camera_fov), this.frame_width / this.frame_height, 0.1, 100.0);
@@ -185,6 +189,7 @@ class Renderer {
     this.bindBuffer(this.context, computeProgram, this.triangles_buffer_id, "Triangles");
     this.context.uniform1f(rngLoc, this.RENDER_SEED);
     this.context.uniform1i(sppLoc, this.SPP);
+    this.SPP += 1;
     this.context.uniformMatrix4fv(cameraInverseProjectionLoc, false, inverse_camera_perspective.elements);
     this.context.uniformMatrix4fv(cameraToWordLoc, false, camera_world_matrix.elements);
     this.context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
@@ -203,7 +208,14 @@ const script = async () => {
   window.renderer = renderer;
   renderer.attach_mouse_events(window.document);
   renderer.init();
-  renderer.render();
+
+  let animationFrame = function(timestamp) {
+    renderer.render();
+    renderer.RENDER_SEED += 1;
+    window.requestAnimationFrame(animationFrame);
+  }
+
+  window.requestAnimationFrame(animationFrame);
 };
 
 window.addEventListener('DOMContentLoaded', script);
