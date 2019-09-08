@@ -13,19 +13,19 @@
 
 var glm = require('glm-js');
 
-import { object_verticies, object_triangles } from './bunny.js';
+import { object_verticies, object_triangles } from './cornel_box.js';
 
 class Renderer {
   constructor() {
     console.log('loaded glm-js version: ', glm.version);
 
     this.RENDER_SEED = 1000;
-    this.SPP = 1;
-    this.camera_position = glm.vec3(-3.01, -0.53, 6.5);
-    this.camera_rotation = glm.vec3(0.98, -6.4, 0.0);
+    this.SPP = 8;
+    this.camera_position = glm.vec3(-5.813, -0.187, 17.0);
+    this.camera_rotation = glm.vec3(-0.208, -0.065, 0.0);
     this.camera_fov = 40.0;
     this.frame_width = 500;
-    this.frame_height = 250;
+    this.frame_height = 500;
   }
 
   init() {
@@ -177,9 +177,6 @@ class Renderer {
     camera_world_matrix = glm.rotate(camera_world_matrix, this.camera_rotation.y, glm.vec3(0.0, -1.0, 0.0));
     camera_world_matrix = glm.rotate(camera_world_matrix, this.camera_rotation.x, glm.vec3(1.0, 0.0, 0.0));
     camera_world_matrix = glm.translate(camera_world_matrix, this.camera_position);
-      //* glm.rotate(glm.matthis.camera_rotation.x, glm.vec3(1.0, 0.0, 0.0));
-      //* glm.rotate(this.camera_rotation.y, glm.vec3(0.0, 1.0, 0.0))
-      //* glm.rotate(this.camera_rotation.z, glm.vec3(0.0, 0.0, 1.0));
 
     // Execute the ComputeShader.
     this.context.useProgram(computeProgram);

@@ -18,6 +18,8 @@ bool hit_world(Ray r, inout float t, inout vec3 n)
         }
     }
 
+    t = t_min;
+
     return does_hit;
 }
 
@@ -26,21 +28,32 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
 {
     float t;
     vec3 n;
-    int max_depth = 10;
+    int max_depth = 3;
     int depth = 0;
 
     float factor = 1.0;
 
+    vec3 color;
+
     while (depth < max_depth && hit_world(r, t, n) && t > 0.0)
     {
-        r.origin = ray_at(r, t);
-        vec3 target = r.origin + n + rand3(seed, pixel);
-        r.direction = normalize(target - r.origin);
+        vec3 p = ray_at(r, t);
+        r.origin = p;
+        vec2 s = rand2(seed, pixel);
+        vec3 target = r.origin + n + sample_sphere_uniform(s);
+        r.direction = target - r.origin;
+        //r.direction = reflect(p - r.origin, n);
         factor *= 0.5;
+
+        if (depth == 0)
+        {
+            color = n * 0.5 + 0.5;
+        }
+
         depth++;
     }
 
     vec3 dir = normalize(r.direction);
     t = 0.5 * (dir.y + 1.0);
-    return factor * ((1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0));
+    return  factor * ((1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0));
 }
