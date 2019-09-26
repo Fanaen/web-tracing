@@ -191,6 +191,11 @@ class Renderer {
       return;
     }
 
+    if (!document.querySelector('.progressiveRendering').checked && this.SPP > 0)
+    {
+      return;
+    }
+
     // ComputeShader source
     const computeShaderSource = require('./glsl/compute.glsl');
 
