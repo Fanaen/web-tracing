@@ -19,3 +19,6 @@ layout (std430, binding = 2) readonly buffer Triangles {
     int triangles[];
 };
 
+layout (std430, binding = 3) readonly buffer Meshes {
+    Mesh meshes[];
+};

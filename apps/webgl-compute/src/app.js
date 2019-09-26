@@ -13,7 +13,8 @@
 
 var glm = require('glm-js');
 
-import { object_verticies, object_triangles } from './cornel_box.js';
+import { floor_triangles, floor_vertices, top_light_triangles, top_light_vertices, small_box_triangles, small_box_vertices, ceilling_vertices, ceilling_triangles, background_vertices, background_triangles, left_wall_vertices, left_wall_triangles, right_wall_vertices, right_wall_triangles, tall_box_triangles, tall_box_vertices } from './cornel_box.js';
+import { Mesh, create_meshes_buffer } from './mesh.js';
 
 class Renderer {
   constructor() {
@@ -26,6 +27,17 @@ class Renderer {
     this.camera_fov = 40.0;
     this.frame_width = 500;
     this.frame_height = 500;
+
+    // => Create the scene.
+    this.meshes = new Array();
+    this.meshes.push(new Mesh("floor", floor_vertices, floor_triangles));
+    this.meshes.push(new Mesh("light", top_light_vertices, top_light_triangles));
+    this.meshes.push(new Mesh("small_box", small_box_vertices, small_box_triangles));
+    this.meshes.push(new Mesh("tall_box", tall_box_vertices, tall_box_triangles));
+    this.meshes.push(new Mesh("ceilling", ceilling_vertices, ceilling_triangles));
+    this.meshes.push(new Mesh("background", background_vertices, background_triangles));
+    this.meshes.push(new Mesh("left_wall", left_wall_vertices, left_wall_triangles));
+    this.meshes.push(new Mesh("right_wall", right_wall_vertices, right_wall_triangles));
   }
 
   init() {
@@ -73,8 +85,6 @@ class Renderer {
         this.camera_position.y += (new_mouse_pos.y - this.mouse_pos.y) * 0.005;
         this.mouse_pos = new_mouse_pos;
         this.SPP = 0;
-
-        this.render();
       }
       else if (this.mouse_down && !this.mouse_right)
       {
@@ -83,46 +93,88 @@ class Renderer {
         this.camera_rotation.x -= (new_mouse_pos.y - this.mouse_pos.y) * 0.002;
         this.mouse_pos = new_mouse_pos;
         this.SPP = 0;
-
-        this.render();
       }
     }
 
     document.addEventListener('wheel', (e) => {
       this.camera_position.z += e.deltaY * 0.005;
       this.SPP = 0;
-      this.render();
     });
   }
 
   create_scene_buffer(context)
   {
-    // Create vertices buffer.
-    // We must pad to fit in vec4.
-    // https://stackoverflow.com/questions/29531237/memory-allocation-with-std430-qualifier 
-    const vertices_buffer = new Float32Array(object_verticies.length / 3 * 4);
+    // Find the total number of vertices and triangles.
+    let total_vertice_count = 0, total_triangle_count = 0;
+    this.meshes.forEach(mesh => {
+      total_vertice_count += mesh.vertices.length;
+      total_triangle_count += mesh.indices.length;
+    });
 
-    for (var i = 0, e = object_verticies.length, gpu_i = 0; i < e; i += 3)
-    {
-      vertices_buffer[gpu_i++] = object_verticies[i];
-      vertices_buffer[gpu_i++] = object_verticies[i + 1];
-      vertices_buffer[gpu_i++] = object_verticies[i + 2];
-      vertices_buffer[gpu_i++] = 0.0;
-    }
-    
+    console.log("Total : ", total_vertice_count / 3, total_triangle_count / 3);
+
+    // Create a buffer containing all vertices.
+    // We must pad to fit in vec4 -> https://stackoverflow.com/questions/29531237/memory-allocation-with-std430-qualifier.
+    const vertices_buffer = new Float32Array((total_vertice_count / 3) * 4);
+
+    let gpu_i = 0; 
+    let triangles_buffer = new Array();
+    let indices_offset = 0;
+    let accumulating_triangle_count = 0;
+
+    this.meshes.forEach(mesh => {
+      let vertices = mesh.vertices;
+
+      console.log("Mesh " + mesh.name + " " + mesh.vertice_count + " vertices : ", vertices);
+      console.log("Mesh " + mesh.name + " " + mesh.triangle_count + " triangles : ", mesh.indices);
+
+      for (var i = 0; i < vertices.length; i += 3)
+      {
+        vertices_buffer[gpu_i++] = vertices[i];
+        vertices_buffer[gpu_i++] = vertices[i + 1];
+        vertices_buffer[gpu_i++] = vertices[i + 2];
+        vertices_buffer[gpu_i++] = 0.0;
+      }
+
+      triangles_buffer = triangles_buffer.concat(mesh.indices.map(i => i + indices_offset));
+      mesh.offset = accumulating_triangle_count;
+      accumulating_triangle_count += mesh.triangle_count * 3;
+      indices_offset += mesh.vertice_count;
+    });
+
+    console.assert(gpu_i == vertices_buffer.length, "GPU buffer does not match verticies count.", gpu_i, vertices_buffer.length);
+    console.assert(gpu_i == ((total_vertice_count / 3) * 4));
+
+    console.log("Vertices : ", vertices_buffer);
+
+    // Fill and send the vertices buffer to the gpu.
     this.vertices_buffer_id = context.createBuffer();
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.vertices_buffer_id);
     context.bufferData(context.SHADER_STORAGE_BUFFER, vertices_buffer.length * 4, context.STATIC_DRAW);
     context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, vertices_buffer);
 
-    // Create triangles buffer.
+    // Create a buffer containing all triangles.
+
+    triangles_buffer = new Int32Array(triangles_buffer);
+
+    console.log("Triangles : ", triangles_buffer);
+
+    // Fill and send the triangles buffer to the gpu.
     this.triangles_buffer_id = context.createBuffer();
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.triangles_buffer_id);
-    context.bufferData(context.SHADER_STORAGE_BUFFER, object_triangles.length * 4, context.STATIC_DRAW);
-    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, new Int32Array(object_triangles));
+    context.bufferData(context.SHADER_STORAGE_BUFFER, triangles_buffer.length * 4, context.STATIC_DRAW);
+    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, triangles_buffer);
 
     // Create the texture into which the image will be rendered.
     this.texture = this.context.createTexture();
+
+    // Create a buffer containing all meshes.
+    const meshes_buffer = create_meshes_buffer(this.meshes);
+
+    this.meshes_buffer_id = context.createBuffer();
+    context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.meshes_buffer_id);
+    context.bufferData(context.SHADER_STORAGE_BUFFER, meshes_buffer.byteLength, context.STATIC_DRAW);
+    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, meshes_buffer);
   }
 
   bindBuffer(context, compute_program, buffer_id, layout_name)
@@ -187,6 +239,7 @@ class Renderer {
     //this.bindBuffer(this.context, computeProgram, this.spheres_buffer_id, "Scene");
     this.bindBuffer(this.context, computeProgram, this.vertices_buffer_id, "Vertices");
     this.bindBuffer(this.context, computeProgram, this.triangles_buffer_id, "Triangles");
+    this.bindBuffer(this.context, computeProgram, this.meshes_buffer_id, "Meshes");
     this.context.uniform1f(rngLoc, this.RENDER_SEED);
     this.context.uniform1i(sppLoc, this.SPP);
     this.SPP += 1;
@@ -200,8 +253,26 @@ class Renderer {
       0, 0, this.frame_width, this.frame_height,
       0, 0, this.frame_width, this.frame_height,
       this.context.COLOR_BUFFER_BIT, this.context.NEAREST);
+
+    //const result = new ArrayBuffer(15);
+    //this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, new DataView(result)); // getBufferSubData() parameter 3 should be of ArrayBufferView, so I use DataView, but you can use any other ArrayBufferView like Float32Array
+    //console.log(new Int32Array(result));
+    /*
+    this.bindBuffer(this.context, computeProgram, this.triangles_buffer_id, "Triangles");
+    let result = new Int32Array(12);
+    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
+    console.log("GPU triangles buffer: ", result);
+    this.bindBuffer(this.context, computeProgram, this.vertices_buffer_id, "Vertices");
+    result = new Float32Array(32);
+    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
+    console.log("GPU vertices buffer: ", result);
+    this.bindBuffer(this.context, computeProgram, this.meshes_buffer_id, "Meshes");
+    result = new Int32Array(4);
+    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
+    console.log("GPU meshes buffer: ", result);
+    */
   }
-};
+}
 
 const script = async () => {
   let renderer = new Renderer();
@@ -210,8 +281,12 @@ const script = async () => {
   renderer.init();
 
   let animationFrame = function(timestamp) {
-    renderer.render();
-    renderer.RENDER_SEED += 1;
+    if (renderer.SPP < 32)
+    {
+      renderer.render();
+      renderer.RENDER_SEED += 1;
+    }
+
     window.requestAnimationFrame(animationFrame);
   }
 

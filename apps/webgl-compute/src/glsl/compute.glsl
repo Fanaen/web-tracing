@@ -3,6 +3,7 @@ precision highp float;
 precision highp int;
 precision mediump image2DArray;
 
+@import ./includes/mesh;
 
 @import ./includes/layout;
 @import ./includes/uniform;

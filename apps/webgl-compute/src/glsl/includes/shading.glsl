@@ -4,6 +4,7 @@ bool hit_world(Ray r, inout float t, inout vec3 n)
     float t_min = -1.0;
     t = 0.0;
 
+    /*
     for (int i = 0, e = triangles.length(); i < e; i += 3)
     {
         vec3 v0 = vertices[triangles[i]];
@@ -15,6 +16,31 @@ bool hit_world(Ray r, inout float t, inout vec3 n)
             t_min = t;
             n = normalize(cross(v1 - v0, v2 - v0));
             does_hit = true;
+
+        }
+    }
+
+    t = t_min;
+    return does_hit;
+    */
+
+    for (int i = 0; i < meshes.length(); ++i)
+    {
+        Mesh mesh = meshes[i];
+
+        for (int j = 0; j < mesh.triangle_count * 3; j += 3)
+        {
+            vec3 v0 = vertices[triangles[mesh.offset + j]];
+            vec3 v1 = vertices[triangles[mesh.offset + j + 1]];
+            vec3 v2 = vertices[triangles[mesh.offset + j + 2]];
+
+            if (hit_triangle_mt(r, v0, v1, v2, t) && (t < t_min || t_min == -1.0))
+            {
+                t_min = t;
+                n = normalize(cross(v1 - v0, v2 - v0));
+                does_hit = true;
+            }
+
         }
     }
 
@@ -34,6 +60,12 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
     float factor = 1.0;
 
     vec3 color;
+
+    if (meshes.length() == 2 && meshes[0].offset == 0 && meshes[0].triangle_count == 2
+        && meshes[1].offset == 4 && meshes[1].triangle_count == 2)
+    {
+        //return vec3(0.0, 1.0, 0.0);
+    }
 
     while (depth < max_depth && hit_world(r, t, n) && t > 0.0)
     {
