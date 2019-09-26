@@ -2,5 +2,8 @@ struct Mesh
 {
     int offset;
     int triangle_count;
-    //bool light;
+    float emission;
+    float[3] diffuse;
+    //float y;
+    //float z;
 };

@@ -30,14 +30,18 @@ class Renderer {
 
     // => Create the scene.
     this.meshes = new Array();
-    this.meshes.push(new Mesh("floor", floor_vertices, floor_triangles));
-    this.meshes.push(new Mesh("light", top_light_vertices, top_light_triangles));
-    this.meshes.push(new Mesh("small_box", small_box_vertices, small_box_triangles));
-    this.meshes.push(new Mesh("tall_box", tall_box_vertices, tall_box_triangles));
-    this.meshes.push(new Mesh("ceilling", ceilling_vertices, ceilling_triangles));
-    this.meshes.push(new Mesh("background", background_vertices, background_triangles));
-    this.meshes.push(new Mesh("left_wall", left_wall_vertices, left_wall_triangles));
-    this.meshes.push(new Mesh("right_wall", right_wall_vertices, right_wall_triangles));
+    var floor = new Mesh("floor", floor_vertices, floor_triangles);
+    var light = new Mesh("light", top_light_vertices, top_light_triangles);
+    var small_box = new Mesh("small_box", small_box_vertices, small_box_triangles);
+    var tall_box = new Mesh("tall_box", tall_box_vertices, tall_box_triangles);
+    var ceilling = new Mesh("ceilling", ceilling_vertices, ceilling_triangles);
+    var background = new Mesh("background", background_vertices, background_triangles);
+    var left_wall = new Mesh("left_wall", left_wall_vertices, left_wall_triangles);
+    var right_wall = new Mesh("right_wall", right_wall_vertices, right_wall_triangles);
+    left_wall.diffuse_color = glm.vec3(0.5, 0.0, 0.0);
+    right_wall.diffuse_color = glm.vec3(0.0, 0.5, 0.0);
+    light.emission = 100.0;
+    this.meshes.push(floor, light, small_box, tall_box, ceilling, background, left_wall, right_wall);
   }
 
   init() {
@@ -175,8 +179,9 @@ class Renderer {
 
     this.meshes_buffer_id = context.createBuffer();
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.meshes_buffer_id);
-    context.bufferData(context.SHADER_STORAGE_BUFFER, meshes_buffer.byteLength, context.STATIC_DRAW);
-    context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, meshes_buffer);
+    context.bufferData(context.SHADER_STORAGE_BUFFER, meshes_buffer, context.STATIC_DRAW);
+    context.bindBufferBase(context.SHADER_STORAGE_BUFFER, 0, this.meshes_buffer_id);
+    //context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, meshes_buffer);
   }
 
   bindBuffer(context, compute_program, buffer_id, layout_name)
@@ -191,7 +196,7 @@ class Renderer {
       return;
     }
 
-    if (!document.querySelector('.progressiveRendering').checked && this.SPP > 0)
+    if (!document.querySelector('.progressiveRendering').checked && this.SPP != 0)
     {
       return;
     }
@@ -205,6 +210,7 @@ class Renderer {
     this.context.compileShader(computeShader);
     if (!this.context.getShaderParameter(computeShader, this.context.COMPILE_STATUS)) {
       console.error(this.context.getShaderInfoLog(computeShader));
+      this.SPP = 120; // hack
       return;
     }
 
@@ -281,6 +287,13 @@ class Renderer {
     //const result = new ArrayBuffer(15);
     //this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, new DataView(result)); // getBufferSubData() parameter 3 should be of ArrayBufferView, so I use DataView, but you can use any other ArrayBufferView like Float32Array
     //console.log(new Int32Array(result));
+    this.bindBuffer(this.context, computeProgram, this.meshes_buffer_id, "Meshes");
+    let result = new Int32Array(5);
+    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
+    console.log("GPU meshes buffer as int: ", result);
+    result = new Float32Array(5);
+    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
+    console.log("GPU meshes buffer as float: ", result);
     /*
     this.bindBuffer(this.context, computeProgram, this.triangles_buffer_id, "Triangles");
     let result = new Int32Array(12);
