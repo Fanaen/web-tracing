@@ -41,6 +41,8 @@ class Renderer {
   }
 
   init() {
+    this.rayMetricSpan = document.getElementById("rayMetric");
+
     // Canvas setup.
     const canvas = document.querySelector("#glCanvas");
     canvas.width = this.frame_width;
@@ -234,6 +236,8 @@ class Renderer {
     camera_world_matrix = glm.rotate(camera_world_matrix, this.camera_rotation.x, glm.vec3(1.0, 0.0, 0.0));
     camera_world_matrix = glm.translate(camera_world_matrix, this.camera_position);
 
+    const t0 = performance.now();
+    
     // Execute the ComputeShader.
     this.context.useProgram(computeProgram);
     //this.bindBuffer(this.context, computeProgram, this.spheres_buffer_id, "Scene");
@@ -245,14 +249,29 @@ class Renderer {
     this.SPP += 1;
     this.context.uniformMatrix4fv(cameraInverseProjectionLoc, false, inverse_camera_perspective.elements);
     this.context.uniformMatrix4fv(cameraToWordLoc, false, camera_world_matrix.elements);
+    
+    // Run the compute shader.
     this.context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
-    this.context.memoryBarrier(this.context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    // Wait for the compute shader to finish (not necessary, i keep it only for debug).
+    //this.context.memoryBarrier(this.context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    this.context.memoryBarrier(this.context.SHADER_STORAGE_BARRIER_BIT);
 
     // show computed texture to Canvas
     this.context.blitFramebuffer(
       0, 0, this.frame_width, this.frame_height,
       0, 0, this.frame_width, this.frame_height,
       this.context.COLOR_BUFFER_BIT, this.context.NEAREST);
+      
+    // Compute metrics.
+    const t1 = performance.now();
+    const timeSpentInSecondes = (t1 - t0) / 1000.0;
+
+    const primary_ray_count = this.frame_height * this.frame_width / 1000000.0;
+    const ray_metric = Math.round(primary_ray_count / timeSpentInSecondes);
+
+    this.rayMetricSpan.innerText = ray_metric.toString();
+    
 
     //const result = new ArrayBuffer(15);
     //this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, new DataView(result)); // getBufferSubData() parameter 3 should be of ArrayBufferView, so I use DataView, but you can use any other ArrayBufferView like Float32Array
