@@ -7,8 +7,8 @@ export class Mesh {
         this.triangle_count = indices.length / 3;
         this.vertice_count = vertices.length / 3;
         this.offset = undefined;
-        this.diffuse_color = glm.vec3(0.4, 0.4, 0.4);
-        this.emission = 0.0;
+        this.diffuse_color = glm.vec3(0.4);
+        this.emission = glm.vec3(0.0);
     }
 
     static get_padding()
@@ -17,20 +17,22 @@ export class Mesh {
         // 
         // int offset; 4 bytes
         // int triangle_count; 4 bytes
-        // float emission; 4 bytes
-        // 4 byte padding
+        // 8 bytes padding
         // vec3 diffuse_color; 12 bytes
-        // total : 24
+        // 4 bytes padding
+        // vec3 emission; 12 bytes
+        // 4 bytes padding
+        // total : 48
         //
         // Rounded up to 16 byte padding
         // 
-        // total : 32
+        // total : 48
         //
         // See why padding is required here:
         // https://twitter.com/9ballsyndrome/status/1178039885090848770
         // https://www.khronos.org/registry/OpenGL/specs/es/3.1/es_spec_3.1.pdf "7.6.2.2 Standard Uniform Block Layout" [1-10]
         
-        return 32;
+        return 48;
     }
 }
 
@@ -48,11 +50,14 @@ export function create_meshes_buffer(meshes)
 
         int32Data[four_bytes_padding * index] = element.offset;
         int32Data[four_bytes_padding * index + 1] = element.triangle_count;
-        float32Data[four_bytes_padding * index + 2] = element.emission;
         // padding
         float32Data[four_bytes_padding * index + 4] = element.diffuse_color.x;
         float32Data[four_bytes_padding * index + 5] = element.diffuse_color.y;
         float32Data[four_bytes_padding * index + 6] = element.diffuse_color.z;
+        // padding
+        float32Data[four_bytes_padding * index + 8] = element.emission.x;
+        float32Data[four_bytes_padding * index + 9] = element.emission.y;
+        float32Data[four_bytes_padding * index + 10] = element.emission.z;
     }
 
     console.log("Meshes buffer: ", buffer.byteLength, int32Data, float32Data);
