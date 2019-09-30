@@ -17,9 +17,20 @@ export class Mesh {
         // 
         // int offset; 4 bytes
         // int triangle_count; 4 bytes
+        // float emission; 4 bytes
+        // 4 byte padding
         // vec3 diffuse_color; 12 bytes
-        // total : 20
-        return 4 + 4 + 4 + 12;
+        // total : 24
+        //
+        // Rounded up to 16 byte padding
+        // 
+        // total : 32
+        //
+        // See why padding is required here:
+        // https://twitter.com/9ballsyndrome/status/1178039885090848770
+        // https://www.khronos.org/registry/OpenGL/specs/es/3.1/es_spec_3.1.pdf "7.6.2.2 Standard Uniform Block Layout" [1-10]
+        
+        return 32;
     }
 }
 
@@ -30,17 +41,18 @@ export function create_meshes_buffer(meshes)
     const int32Data = new Int32Array(buffer);
     const float32Data = new Float32Array(buffer);
 
-    const padding = 6;
+    const four_bytes_padding = Mesh.get_padding() / 4;
 
     for (let index = 0; index < meshes.length; index++) {
         const element = meshes[index];
 
-        int32Data[padding * index] = element.offset;
-        int32Data[padding * index + 1] = element.triangle_count;
-        float32Data[padding * index + 2] = element.emission;
-        float32Data[padding * index + 3] = element.diffuse_color.x;
-        float32Data[padding * index + 4] = element.diffuse_color.y;
-        float32Data[padding * index + 5] = element.diffuse_color.z;
+        int32Data[four_bytes_padding * index] = element.offset;
+        int32Data[four_bytes_padding * index + 1] = element.triangle_count;
+        float32Data[four_bytes_padding * index + 2] = element.emission;
+        // padding
+        float32Data[four_bytes_padding * index + 4] = element.diffuse_color.x;
+        float32Data[four_bytes_padding * index + 5] = element.diffuse_color.y;
+        float32Data[four_bytes_padding * index + 6] = element.diffuse_color.z;
     }
 
     console.log("Meshes buffer: ", buffer.byteLength, int32Data, float32Data);

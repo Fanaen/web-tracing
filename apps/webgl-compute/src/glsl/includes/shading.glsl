@@ -100,7 +100,7 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
         bool visibility = !hit_world(r, EPSILON, dist - EPSILON, t, mesh_indice, n);
         float light_attenuation = 1.0 / (dist * dist);
 
-        color = vec3(mesh.diffuse[0], mesh.diffuse[1], mesh.diffuse[2]);
+        color = mesh.diffuse;
         color *= visibility ? 1.0 : 0.0;
         color *= light_attenuation;
         color *= light_mesh.emission;  
