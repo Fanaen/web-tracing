@@ -7,7 +7,7 @@ bool hit_triangle_mt(Ray r, vec3 v0, vec3 v1, vec3 v2, out float t)
     vec3 h = cross(r.direction, e2);
     float a = dot(e1, h);
 
-    if (a < EPSILON)
+    if (a < EPSILON && a > EPSILON)
         return false;
 
     float f = 1.0 / a;

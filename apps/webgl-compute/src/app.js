@@ -40,7 +40,7 @@ class Renderer {
     var right_wall = new Mesh("right_wall", right_wall_vertices, right_wall_triangles);
     left_wall.diffuse_color = glm.vec3(0.5, 0.0, 0.0);
     right_wall.diffuse_color = glm.vec3(0.0, 0.5, 0.0);
-    light.emission = 100.0;
+    light.emission = 10.0;
     this.meshes.push(floor, light, small_box, tall_box, ceilling, background, left_wall, right_wall);
   }
 
@@ -210,7 +210,7 @@ class Renderer {
     this.context.compileShader(computeShader);
     if (!this.context.getShaderParameter(computeShader, this.context.COMPILE_STATUS)) {
       console.error(this.context.getShaderInfoLog(computeShader));
-      this.SPP = 120; // hack
+      this.context = null;
       return;
     }
 
@@ -220,6 +220,7 @@ class Renderer {
     this.context.linkProgram(computeProgram);
     if (!this.context.getProgramParameter(computeProgram, this.context.LINK_STATUS)) {
       console.error(this.context.getProgramInfoLog(computeProgram));
+      this.context = null;
       return;
     }
 
@@ -287,13 +288,13 @@ class Renderer {
     //const result = new ArrayBuffer(15);
     //this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, new DataView(result)); // getBufferSubData() parameter 3 should be of ArrayBufferView, so I use DataView, but you can use any other ArrayBufferView like Float32Array
     //console.log(new Int32Array(result));
-    this.bindBuffer(this.context, computeProgram, this.meshes_buffer_id, "Meshes");
-    let result = new Int32Array(5);
-    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
-    console.log("GPU meshes buffer as int: ", result);
-    result = new Float32Array(5);
-    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
-    console.log("GPU meshes buffer as float: ", result);
+    //this.bindBuffer(this.context, computeProgram, this.meshes_buffer_id, "Meshes");
+    //let result = new Int32Array(5);
+    //this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
+    //console.log("GPU meshes buffer as int: ", result);
+    //result = new Float32Array(5);
+    //this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
+    //console.log("GPU meshes buffer as float: ", result);
     /*
     this.bindBuffer(this.context, computeProgram, this.triangles_buffer_id, "Triangles");
     let result = new Int32Array(12);

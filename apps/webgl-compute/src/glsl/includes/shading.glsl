@@ -1,8 +1,8 @@
-bool hit_world(Ray r, float t_max, inout float t, inout int mesh_indice, inout vec3 n)
+bool hit_world(Ray r, float t_min, float t_max, inout float t, inout int mesh_indice, inout vec3 n)
 {
     bool does_hit = false;
-    float t_min = -1.0;
     t = 0.0;
+    float best_min_t = t_max;
 
     /*
     for (int i = 0, e = triangles.length(); i < e; i += 3)
@@ -35,9 +35,9 @@ bool hit_world(Ray r, float t_max, inout float t, inout int mesh_indice, inout v
             vec3 v1 = vertices[triangles[mesh.offset + j + 1]];
             vec3 v2 = vertices[triangles[mesh.offset + j + 2]];
 
-            if (hit_triangle_mt(r, v0, v1, v2, t) && (t < t_min || t_min == -1.0) && t < t_max)
+            if (hit_triangle_mt(r, v0, v1, v2, t) && t >= t_min && t < t_max && t < best_min_t)
             {
-                t_min = t;
+                best_min_t = t;
                 does_hit = true;
                 mesh_indice = i;
                 n = normalize(cross(v1 - v0, v2 - v0));
@@ -46,7 +46,7 @@ bool hit_world(Ray r, float t_max, inout float t, inout int mesh_indice, inout v
         }
     }
 
-    t = t_min;
+    t = best_min_t;
 
     return does_hit;
 }
@@ -76,7 +76,7 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
         //return vec3(0.0, 1.0, 0.0);
     }
 
-    while (depth < max_depth && hit_world(r, MAX_FLOAT, t, mesh_indice, n) && t > 0.0)
+    while (depth < max_depth && hit_world(r, 0.0, MAX_FLOAT, t, mesh_indice, n) && t > 0.0)
     {
         Mesh mesh = meshes[mesh_indice];
 
@@ -88,25 +88,25 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
         //r.direction = reflect(p - r.origin, n);
         factor += mesh.emission;
 
+        //color = vec3(mesh.diffuse[0], mesh.diffuse[1], mesh.diffuse[2]);
+        //break;
+
         vec3 lp = random_point_on_mesh(light_mesh, seed, pixel);
-        vec3 lpp = p - lp;
-        float dist = dot(lpp, lpp);
 
-        if (!hit_world(r, dist - EPSILON, t, mesh_indice, n))
-        {
-            factor += light_mesh.emission;
-            color = vec3(mesh.diffuse[0], mesh.diffuse[1], mesh.diffuse[2]);
-        }
 
+        r.origin = p;
+        r.direction = normalize(lp - p);
+        float dist = distance(p, lp);
+        bool visibility = !hit_world(r, EPSILON, dist - EPSILON, t, mesh_indice, n);
+        float light_attenuation = 1.0 / (dist * dist);
+
+        color = vec3(mesh.diffuse[0], mesh.diffuse[1], mesh.diffuse[2]);
+        color *= visibility ? 1.0 : 0.0;
+        color *= light_attenuation;
+        color *= light_mesh.emission;  
 
         depth++;
     }
 
-    return color * factor;
-
     return color;
-
-    vec3 dir = normalize(r.direction);
-    t = 0.5 * (dir.y + 1.0);
-    return  factor * ((1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0));
 }
