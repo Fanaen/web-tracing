@@ -288,32 +288,6 @@ class Renderer {
     const ray_metric = Math.round(primary_ray_count / timeSpentInSecondes);
 
     this.rayMetricSpan.innerText = ray_metric.toString();
-    
-
-    //const result = new ArrayBuffer(15);
-    //this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, new DataView(result)); // getBufferSubData() parameter 3 should be of ArrayBufferView, so I use DataView, but you can use any other ArrayBufferView like Float32Array
-    //console.log(new Int32Array(result));
-    //this.bindBuffer(this.context, computeProgram, this.meshes_buffer_id, "Meshes");
-    //let result = new Int32Array(5);
-    //this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
-    //console.log("GPU meshes buffer as int: ", result);
-    //result = new Float32Array(5);
-    //this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
-    //console.log("GPU meshes buffer as float: ", result);
-    /*
-    this.bindBuffer(this.context, computeProgram, this.triangles_buffer_id, "Triangles");
-    let result = new Int32Array(12);
-    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
-    console.log("GPU triangles buffer: ", result);
-    this.bindBuffer(this.context, computeProgram, this.vertices_buffer_id, "Vertices");
-    result = new Float32Array(32);
-    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
-    console.log("GPU vertices buffer: ", result);
-    this.bindBuffer(this.context, computeProgram, this.meshes_buffer_id, "Meshes");
-    result = new Int32Array(4);
-    this.context.getBufferSubData(this.context.SHADER_STORAGE_BUFFER, 0, result);
-    console.log("GPU meshes buffer: ", result);
-    */
   }
 }
 
