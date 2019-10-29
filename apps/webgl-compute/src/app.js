@@ -61,8 +61,9 @@ class Renderer {
       return;
     }
 
-    // Create a buffer for the scene.
     this.create_scene_buffer(this.context);
+
+    this.compile_shaders();
   }
 
   attach_mouse_events(document) {
@@ -193,6 +194,41 @@ class Renderer {
     context.bindBufferBase(context.SHADER_STORAGE_BUFFER, bind, buffer_id);
   }
 
+  compile_shaders()
+  {
+    const computeShaderSource = require('./glsl/compute.glsl');
+
+    //=> Compile the program.
+    const computeShader = this.context.createShader(this.context.COMPUTE_SHADER);
+    this.context.shaderSource(computeShader, computeShaderSource);
+    this.context.compileShader(computeShader);
+
+    if (!this.context.getShaderParameter(computeShader, this.context.COMPILE_STATUS)) {
+      console.error(this.context.getShaderInfoLog(computeShader));
+      this.context = null;
+      return;
+    }
+
+    //=> Create the program.
+    this.renderProgram = this.context.createProgram();
+    this.context.attachShader(this.renderProgram, computeShader);
+    this.context.linkProgram(this.renderProgram);
+
+    if (!this.context.getProgramParameter(this.renderProgram, this.context.LINK_STATUS)) {
+      console.error(this.context.getProgramInfoLog(this.renderProgram));
+      this.context = null;
+      return;
+    }
+
+    //=> Find uniform locations.
+    this.uniform_locations = {
+      rng :                         this.context.getUniformLocation(this.renderProgram, "uInitialSeed"),
+      spp :                         this.context.getUniformLocation(this.renderProgram, "uSamples"),
+      camera_to_world :             this.context.getUniformLocation(this.renderProgram, "uCameraToWorld"),
+      camera_inverse_projection :   this.context.getUniformLocation(this.renderProgram, "uCameraInverseProjection")
+    };
+  }
+
   render() {
     if (!this.context) {
       return;
@@ -202,42 +238,11 @@ class Renderer {
     {
       return;
     }
-
-    // ComputeShader source
-    const computeShaderSource = require('./glsl/compute.glsl');
-
-    // Create WebGLShader for ComputeShader.
-    const computeShader = this.context.createShader(this.context.COMPUTE_SHADER);
-    this.context.shaderSource(computeShader, computeShaderSource);
-    this.context.compileShader(computeShader);
-    if (!this.context.getShaderParameter(computeShader, this.context.COMPILE_STATUS)) {
-      console.error(this.context.getShaderInfoLog(computeShader));
-      this.context = null;
-      return;
-    }
-
-    // Create WebGLProgram for ComputeShader.
-    const computeProgram = this.context.createProgram();
-    this.context.attachShader(computeProgram, computeShader);
-    this.context.linkProgram(computeProgram);
-    if (!this.context.getProgramParameter(computeProgram, this.context.LINK_STATUS)) {
-      console.error(this.context.getProgramInfoLog(computeProgram));
-      this.context = null;
-      return;
-    }
-
-    // Configure uniforms.
-    const rngLoc = this.context.getUniformLocation(computeProgram, "uInitialSeed");
-    const sppLoc = this.context.getUniformLocation(computeProgram, "uSamples");
-    const cameraToWordLoc = this.context.getUniformLocation(computeProgram, "uCameraToWorld");
-    const cameraInverseProjectionLoc = this.context.getUniformLocation(computeProgram, "uCameraInverseProjection");
     
-    // Create texture for ComputeShader write to.
     this.context.bindTexture(this.context.TEXTURE_2D, this.texture);
     this.context.texStorage2D(this.context.TEXTURE_2D, 1, this.context.RGBA8, this.frame_width, this.frame_height);
     this.context.bindImageTexture(0, this.texture, 0, false, 0, this.context.READ_WRITE, this.context.RGBA8);
     
-    // Create frameBuffer to read from texture.
     const frameBuffer = this.context.createFramebuffer();
     this.context.bindFramebuffer(this.context.READ_FRAMEBUFFER, frameBuffer);
     this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, this.texture, 0);
@@ -256,22 +261,20 @@ class Renderer {
     const t0 = performance.now();
     
     // Execute the ComputeShader.
-    this.context.useProgram(computeProgram);
-    //this.bindBuffer(this.context, computeProgram, this.spheres_buffer_id, "Scene");
-    this.bindBuffer(this.context, computeProgram, this.vertices_buffer_id, "Vertices");
-    this.bindBuffer(this.context, computeProgram, this.triangles_buffer_id, "Triangles");
-    this.bindBuffer(this.context, computeProgram, this.meshes_buffer_id, "Meshes");
-    this.context.uniform1f(rngLoc, this.RENDER_SEED);
-    this.context.uniform1i(sppLoc, this.SPP);
+    this.context.useProgram(this.renderProgram);
+    this.bindBuffer(this.context, this.renderProgram, this.vertices_buffer_id, "Vertices");
+    this.bindBuffer(this.context, this.renderProgram, this.triangles_buffer_id, "Triangles");
+    this.bindBuffer(this.context, this.renderProgram, this.meshes_buffer_id, "Meshes");
+    this.context.uniform1f(this.uniform_locations.rng, this.RENDER_SEED);
+    this.context.uniform1i(this.uniform_locations.spp, this.SPP);
     this.SPP += 1;
-    this.context.uniformMatrix4fv(cameraInverseProjectionLoc, false, inverse_camera_perspective.elements);
-    this.context.uniformMatrix4fv(cameraToWordLoc, false, camera_world_matrix.elements);
+    this.context.uniformMatrix4fv(this.uniform_locations.camera_inverse_projection, false, inverse_camera_perspective.elements);
+    this.context.uniformMatrix4fv(this.uniform_locations.camera_to_world, false, camera_world_matrix.elements);
     
     // Run the compute shader.
     this.context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
 
     // Wait for the compute shader to finish (not necessary, i keep it only for debug).
-    //this.context.memoryBarrier(this.context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
     this.context.memoryBarrier(this.context.SHADER_STORAGE_BARRIER_BIT);
 
     // show computed texture to Canvas
