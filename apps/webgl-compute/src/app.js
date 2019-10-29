@@ -21,7 +21,7 @@ class Renderer {
   constructor() {
     console.log('loaded glm-js version: ', glm.version);
 
-    this.RENDER_SEED = 1000;
+    this.RENDER_SEED = 0;
     this.SPP = 0;
     this.camera_position = glm.vec3(-5.813, -0.187, 17.0);
     this.camera_rotation = glm.vec3(-0.208, -0.065, 0.0);
@@ -175,14 +175,19 @@ class Renderer {
     context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, triangles_buffer);
 
     // Create the texture into which the image will be rendered.
-    this.texture = this.context.createTexture();
-    this.context.bindTexture(this.context.TEXTURE_2D, this.texture);
+    this.frameTexture = this.context.createTexture();
+    this.context.bindTexture(this.context.TEXTURE_2D, this.frameTexture);
+    this.context.texStorage2D(this.context.TEXTURE_2D, 1, this.context.RGBA8, this.frame_width, this.frame_height);
+
+    // Create the texture into which all the frame will be accumulated.
+    this.accumulatedTexture = this.context.createTexture();
+    this.context.bindTexture(this.context.TEXTURE_2D, this.accumulatedTexture);
     this.context.texStorage2D(this.context.TEXTURE_2D, 1, this.context.RGBA8, this.frame_width, this.frame_height);
 
     // Create a frameBuffer to be able to blit a texture into the canvas.
     this.frameBuffer = this.context.createFramebuffer();
     this.context.bindFramebuffer(this.context.READ_FRAMEBUFFER, this.frameBuffer);
-    this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, this.texture, 0);
+    this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, this.accumulatedTexture, 0);
 
     // Create a buffer containing all meshes.
     const meshes_buffer = create_meshes_buffer(this.meshes);
@@ -203,6 +208,7 @@ class Renderer {
   compile_shaders()
   {
     const computeShaderSource = require('./glsl/compute.glsl');
+    const blitShaderSource = require('./glsl/blit.glsl');
 
     //=> Compile the program.
     const computeShader = this.context.createShader(this.context.COMPUTE_SHADER);
@@ -226,6 +232,28 @@ class Renderer {
       return;
     }
 
+    //=> Compile blit the program.
+    const blitShader = this.context.createShader(this.context.COMPUTE_SHADER);
+    this.context.shaderSource(blitShader, blitShaderSource);
+    this.context.compileShader(blitShader);
+
+    if (!this.context.getShaderParameter(blitShader, this.context.COMPILE_STATUS)) {
+      console.error(this.context.getShaderInfoLog(blitShader));
+      this.context = null;
+      return;
+    }
+
+    //=> Create the blit program.
+    this.blitProgram = this.context.createProgram();
+    this.context.attachShader(this.blitProgram, blitShader);
+    this.context.linkProgram(this.blitProgram);
+
+    if (!this.context.getProgramParameter(this.blitProgram, this.context.LINK_STATUS)) {
+      console.error(this.context.getProgramInfoLog(this.blitProgram));
+      this.context = null;
+      return;
+    }
+
     //=> Find uniform locations.
     this.uniform_locations = {
       rng :                         this.context.getUniformLocation(this.renderProgram, "uInitialSeed"),
@@ -245,8 +273,9 @@ class Renderer {
       return;
     }
     
-    //=> Bind the texture.
-    this.context.bindImageTexture(0, this.texture, 0, false, 0, this.context.WRITE_ONLY, this.context.RGBA8);
+    //=> Bind the textures.
+    this.context.bindImageTexture(0, this.frameTexture, 0, false, 0, this.context.READ_WRITE, this.context.RGBA8);
+    this.context.bindImageTexture(1, this.accumulatedTexture, 0, false, 0, this.context.READ_WRITE, this.context.RGBA8);
     
     //=> Configure the camera.
     const camera_perspective = glm.perspective(glm.radians(this.camera_fov), this.frame_width / this.frame_height, 0.1, 100.0);
@@ -274,8 +303,13 @@ class Renderer {
     //=> Render the frame.
     this.context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
 
-    // Wait for the compute shader to finish (not necessary, i keep it only for debug).
-    this.context.memoryBarrier(this.context.SHADER_STORAGE_BARRIER_BIT);
+    // Wait for the compute shader to finish.
+    this.context.memoryBarrier(this.context.TEXTURE_FETCH_BARRIER_BIT);
+
+    //=> Blit the frame into the accumulation buffer.
+    this.context.useProgram(this.blitProgram);
+    this.context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
+    this.context.memoryBarrier(this.context.TEXTURE_FETCH_BARRIER_BIT);
 
     //=> Show the frame.
     this.context.blitFramebuffer(
@@ -291,8 +325,6 @@ class Renderer {
     const ray_metric = Math.round(primary_ray_count / timeSpentInSecondes);
 
     this.rayMetricSpan.innerText = ray_metric.toString();
-
-    this.SPP += 1;
   }
 }
 
@@ -303,11 +335,9 @@ const script = async () => {
   renderer.init();
 
   let animationFrame = function(timestamp) {
-    if (renderer.SPP < 32)
-    {
-      renderer.render();
-      renderer.RENDER_SEED += 1;
-    }
+    renderer.render();
+    renderer.RENDER_SEED += 1;
+    renderer.SPP += 1;
 
     window.requestAnimationFrame(animationFrame);
   }
