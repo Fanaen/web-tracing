@@ -176,9 +176,13 @@ class Renderer {
 
     // Create the texture into which the image will be rendered.
     this.texture = this.context.createTexture();
+    this.context.bindTexture(this.context.TEXTURE_2D, this.texture);
+    this.context.texStorage2D(this.context.TEXTURE_2D, 1, this.context.RGBA8, this.frame_width, this.frame_height);
 
     // Create a frameBuffer to be able to blit a texture into the canvas.
     this.frameBuffer = this.context.createFramebuffer();
+    this.context.bindFramebuffer(this.context.READ_FRAMEBUFFER, this.frameBuffer);
+    this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, this.texture, 0);
 
     // Create a buffer containing all meshes.
     const meshes_buffer = create_meshes_buffer(this.meshes);
@@ -242,14 +246,8 @@ class Renderer {
     }
     
     //=> Bind the texture.
-    this.context.bindTexture(this.context.TEXTURE_2D, this.texture);
-    this.context.texStorage2D(this.context.TEXTURE_2D, 1, this.context.RGBA8, this.frame_width, this.frame_height);
-    this.context.bindImageTexture(0, this.texture, 0, false, 0, this.context.READ_WRITE, this.context.RGBA8);
+    this.context.bindImageTexture(0, this.texture, 0, false, 0, this.context.WRITE_ONLY, this.context.RGBA8);
     
-    //=> Attach the framebuffer to the texture.
-    this.context.bindFramebuffer(this.context.READ_FRAMEBUFFER, this.frameBuffer);
-    this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, this.texture, 0);
-
     //=> Configure the camera.
     const camera_perspective = glm.perspective(glm.radians(this.camera_fov), this.frame_width / this.frame_height, 0.1, 100.0);
     const inverse_camera_perspective = glm.inverse(camera_perspective);

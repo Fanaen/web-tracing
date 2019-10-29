@@ -41,23 +41,8 @@ void main() {
     // Shade the sample.
     finalColor += color(r, seed, uv);
 
-    // Fetch the previous pixel value.
-    vec4 initial = imageLoad(destTex, storePos);
-
     // Merge this sample with previous samples.
-    vec4 color;
-    if (uSamples == 0)
-    {
-        color = vec4(finalColor, 1.0);
-    }
-    else
-    {
-        // fixme: texture initial is immutable, this is not clean.
-        float factor = 1.0 / (float(uSamples) + 1.0);
-        vec3 generated = finalColor * factor;
-        vec3 on_screen = initial.rgb * (1.0 - factor);
-        color = vec4(generated + on_screen, 1.0);
-    }
+    vec4 color = vec4(finalColor, 1.0);
 
     // Write the pixel.
     imageStore(destTex, storePos, color);
