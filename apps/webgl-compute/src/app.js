@@ -177,6 +177,9 @@ class Renderer {
     // Create the texture into which the image will be rendered.
     this.texture = this.context.createTexture();
 
+    // Create a frameBuffer to be able to blit a texture into the canvas.
+    this.frameBuffer = this.context.createFramebuffer();
+
     // Create a buffer containing all meshes.
     const meshes_buffer = create_meshes_buffer(this.meshes);
 
@@ -184,7 +187,6 @@ class Renderer {
     context.bindBuffer(context.SHADER_STORAGE_BUFFER, this.meshes_buffer_id);
     context.bufferData(context.SHADER_STORAGE_BUFFER, meshes_buffer, context.STATIC_DRAW);
     context.bindBufferBase(context.SHADER_STORAGE_BUFFER, 0, this.meshes_buffer_id);
-    //context.bufferSubData(context.SHADER_STORAGE_BUFFER, 0, meshes_buffer);
   }
 
   bindBuffer(context, compute_program, buffer_id, layout_name)
@@ -239,18 +241,16 @@ class Renderer {
       return;
     }
     
+    //=> Bind the texture.
     this.context.bindTexture(this.context.TEXTURE_2D, this.texture);
     this.context.texStorage2D(this.context.TEXTURE_2D, 1, this.context.RGBA8, this.frame_width, this.frame_height);
     this.context.bindImageTexture(0, this.texture, 0, false, 0, this.context.READ_WRITE, this.context.RGBA8);
     
-    const frameBuffer = this.context.createFramebuffer();
-    this.context.bindFramebuffer(this.context.READ_FRAMEBUFFER, frameBuffer);
+    //=> Attach the framebuffer to the texture.
+    this.context.bindFramebuffer(this.context.READ_FRAMEBUFFER, this.frameBuffer);
     this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, this.texture, 0);
 
-    this.context.memoryBarrier(this.context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    this.context.memoryBarrier(this.context.SHADER_STORAGE_BARRIER_BIT);
-
-    // Configure the camera.
+    //=> Configure the camera.
     const camera_perspective = glm.perspective(glm.radians(this.camera_fov), this.frame_width / this.frame_height, 0.1, 100.0);
     const inverse_camera_perspective = glm.inverse(camera_perspective);
     let camera_world_matrix = glm.mat4();
@@ -260,30 +260,32 @@ class Renderer {
 
     const t0 = performance.now();
     
-    // Execute the ComputeShader.
     this.context.useProgram(this.renderProgram);
+
+    //=> Bind the buffers to the rendering shader.
     this.bindBuffer(this.context, this.renderProgram, this.vertices_buffer_id, "Vertices");
     this.bindBuffer(this.context, this.renderProgram, this.triangles_buffer_id, "Triangles");
     this.bindBuffer(this.context, this.renderProgram, this.meshes_buffer_id, "Meshes");
+
+    //=> Fill the rendering shader uniforms.
     this.context.uniform1f(this.uniform_locations.rng, this.RENDER_SEED);
     this.context.uniform1i(this.uniform_locations.spp, this.SPP);
-    this.SPP += 1;
     this.context.uniformMatrix4fv(this.uniform_locations.camera_inverse_projection, false, inverse_camera_perspective.elements);
     this.context.uniformMatrix4fv(this.uniform_locations.camera_to_world, false, camera_world_matrix.elements);
-    
-    // Run the compute shader.
+
+    //=> Render the frame.
     this.context.dispatchCompute(this.frame_width / 16, this.frame_height / 16, 1);
 
     // Wait for the compute shader to finish (not necessary, i keep it only for debug).
     this.context.memoryBarrier(this.context.SHADER_STORAGE_BARRIER_BIT);
 
-    // show computed texture to Canvas
+    //=> Show the frame.
     this.context.blitFramebuffer(
       0, 0, this.frame_width, this.frame_height,
       0, 0, this.frame_width, this.frame_height,
       this.context.COLOR_BUFFER_BIT, this.context.NEAREST);
       
-    // Compute metrics.
+    //=> Compute metrics.
     const t1 = performance.now();
     const timeSpentInSecondes = (t1 - t0) / 1000.0;
 
@@ -291,6 +293,8 @@ class Renderer {
     const ray_metric = Math.round(primary_ray_count / timeSpentInSecondes);
 
     this.rayMetricSpan.innerText = ray_metric.toString();
+
+    this.SPP += 1;
   }
 }
 
