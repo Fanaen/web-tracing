@@ -60,7 +60,5 @@ export function create_meshes_buffer(meshes)
         float32Data[four_bytes_padding * index + 10] = element.emission.z;
     }
 
-    console.log("Meshes buffer: ", buffer.byteLength, int32Data, float32Data);
-
     return buffer;
 }

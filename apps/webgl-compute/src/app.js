@@ -12,6 +12,7 @@
 //
 
 var glm = require('glm-js');
+var debug_buffers = false;
 
 import { floor_triangles, floor_vertices, top_light_triangles, top_light_vertices, small_box_triangles, small_box_vertices, ceilling_vertices, ceilling_triangles, background_vertices, background_triangles, left_wall_vertices, left_wall_triangles, right_wall_vertices, right_wall_triangles, tall_box_triangles, tall_box_vertices } from './cornel_box.js';
 import { Mesh, create_meshes_buffer } from './mesh.js';
@@ -118,7 +119,7 @@ class Renderer {
       total_triangle_count += mesh.indices.length;
     });
 
-    console.log("Total : ", total_vertice_count / 3, total_triangle_count / 3);
+    if (debug_buffers) console.log("Total : ", total_vertice_count / 3, total_triangle_count / 3);
 
     // Create a buffer containing all vertices.
     // We must pad to fit in vec4 -> https://stackoverflow.com/questions/29531237/memory-allocation-with-std430-qualifier.
@@ -132,8 +133,8 @@ class Renderer {
     this.meshes.forEach(mesh => {
       let vertices = mesh.vertices;
 
-      console.log("Mesh " + mesh.name + " " + mesh.vertice_count + " vertices : ", vertices);
-      console.log("Mesh " + mesh.name + " " + mesh.triangle_count + " triangles : ", mesh.indices);
+      if (debug_buffers) console.log("Mesh " + mesh.name + " " + mesh.vertice_count + " vertices : ", vertices);
+      if (debug_buffers) console.log("Mesh " + mesh.name + " " + mesh.triangle_count + " triangles : ", mesh.indices);
 
       for (var i = 0; i < vertices.length; i += 3)
       {
@@ -152,7 +153,7 @@ class Renderer {
     console.assert(gpu_i == vertices_buffer.length, "GPU buffer does not match verticies count.", gpu_i, vertices_buffer.length);
     console.assert(gpu_i == ((total_vertice_count / 3) * 4));
 
-    console.log("Vertices : ", vertices_buffer);
+    if (debug_buffers) console.log("Vertices : ", vertices_buffer);
 
     // Fill and send the vertices buffer to the gpu.
     this.vertices_buffer_id = context.createBuffer();
@@ -164,7 +165,7 @@ class Renderer {
 
     triangles_buffer = new Int32Array(triangles_buffer);
 
-    console.log("Triangles : ", triangles_buffer);
+    if (debug_buffers) console.log("Triangles : ", triangles_buffer);
 
     // Fill and send the triangles buffer to the gpu.
     this.triangles_buffer_id = context.createBuffer();
@@ -240,6 +241,9 @@ class Renderer {
     const frameBuffer = this.context.createFramebuffer();
     this.context.bindFramebuffer(this.context.READ_FRAMEBUFFER, frameBuffer);
     this.context.framebufferTexture2D(this.context.READ_FRAMEBUFFER, this.context.COLOR_ATTACHMENT0, this.context.TEXTURE_2D, this.texture, 0);
+
+    this.context.memoryBarrier(this.context.SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    this.context.memoryBarrier(this.context.SHADER_STORAGE_BARRIER_BIT);
 
     // Configure the camera.
     const camera_perspective = glm.perspective(glm.radians(this.camera_fov), this.frame_width / this.frame_height, 0.1, 100.0);
