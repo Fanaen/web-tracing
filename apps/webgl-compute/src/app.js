@@ -329,6 +329,9 @@ class Renderer {
     const ray_metric = Math.round(primary_ray_count / timeSpentInSecondes);
 
     this.rayMetricSpan.innerText = ray_metric.toString();
+
+    this.RENDER_SEED += 1;
+    this.SPP += 1;
   }
 }
 
@@ -340,8 +343,6 @@ const script = async () => {
 
   let animationFrame = function(timestamp) {
     renderer.render();
-    renderer.RENDER_SEED += 1;
-    renderer.SPP += 1;
 
     window.requestAnimationFrame(animationFrame);
   }
