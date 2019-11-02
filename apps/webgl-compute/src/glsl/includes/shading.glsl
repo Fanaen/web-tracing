@@ -48,10 +48,16 @@ vec3 random_point_on_mesh(Mesh m, inout float seed, vec2 pixel)
 // #define CAMERA_RAY_EMISSION
 
 // Show the surface normal of the point hitten by the camera ray.
-#define CAMERA_RAY_NORMAL
+// #define CAMERA_RAY_NORMAL
 
 // Don't compute DL and use lambertian BSDF to bounce.
 // #define NAIVE_LAMBERTIAN_PATH_TRACING
+
+// Show the light influence on the surface point hitten by the camera ray.
+// #define LIGHT_ATTENUATION
+
+// Compute direct lighting for the surface point hitten by the camera ray and don't bounce.
+#define NO_BOUNCE_DIRECT_LIGHTING
 
 // Compute the color for a given ray.
 vec3 color(Ray r, inout float seed, vec2 pixel)
@@ -63,9 +69,10 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
     int mesh_indice;
 
 
+// Show the surface color of the point hitten by the camera ray.
 #if defined(CAMERA_RAY_COLOR)
 
-    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) )
+    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) && t > 0.0)
     {
         Mesh mesh = meshes[mesh_indice];
         return mesh.diffuse;
@@ -73,9 +80,10 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
 
     return vec3(0.0);
 
+// Show the surface emission of the point hitten by the camera ray.
 #elif defined(CAMERA_RAY_EMISSION)
 
-    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) )
+    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) && t > 0.0)
     {
         Mesh mesh = meshes[mesh_indice];
         return mesh.emission;
@@ -83,15 +91,17 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
 
     return vec3(0.0);
 
+// Show the surface normal of the point hitten by the camera ray.
 #elif defined(CAMERA_RAY_NORMAL)
 
-    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) )
+    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) && t > 0.0)
     {
         return n * 0.5 + vec3(0.5);
     }
 
     return vec3(0.0);
 
+// Don't compute DL and use lambertian BSDF to bounce.
 #elif defined(NAIVE_LAMBERTIAN_PATH_TRACING)
 
     vec3 color = vec3(0.0);
@@ -131,6 +141,59 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
         r.direction = normalize(target - r.origin);
 
         depth++;
+    }
+
+    return vec3(0.0);
+
+// Show the light influence on the surface point hitten by the camera ray.
+#elif defined(LIGHT_ATTENUATION)
+
+    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) && t > 0.0)
+    {
+        Mesh mesh = meshes[mesh_indice];
+
+        if (mesh.emission != vec3(0.0))
+        {
+            return mesh.emission;
+        }
+
+        vec3 hit_point = ray_at(r, t);
+
+        // todo: Pick a random light.
+        Mesh light = meshes[0];
+
+        // Generate a point on the light.
+        vec3 light_point = random_point_on_mesh(light, seed, pixel);
+
+        float falloff = 1.0 / length(hit_point - light_point);
+
+        return vec3(falloff);
+    }
+
+    return vec3(0.0);
+
+// Compute direct lighting for the surface point hitten by the camera ray and don't bounce.
+#elif defined(NO_BOUNCE_DIRECT_LIGHTING)
+
+    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) && t > 0.0)
+    {
+        Mesh mesh = meshes[mesh_indice];
+
+        if (mesh.emission != vec3(0.0))
+        {
+            return mesh.emission;
+        }
+
+        vec3 hit_point = ray_at(r, t);
+
+        // todo: Pick a random light.
+        Mesh light = meshes[0];
+
+        // Generate a point on the light.
+        vec3 light_point = random_point_on_mesh(light, seed, pixel);
+
+        return mesh.diffuse * vec3(1.0 / length(hit_point - light_point));
+        //return mesh.diffuse;
     }
 
     return vec3(0.0);

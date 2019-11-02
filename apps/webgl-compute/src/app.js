@@ -31,8 +31,8 @@ class Renderer {
 
     // => Create the scene.
     this.meshes = new Array();
-    var floor = new Mesh("floor", floor_vertices, floor_triangles);
     var light = new Mesh("light", top_light_vertices, top_light_triangles);
+    var floor = new Mesh("floor", floor_vertices, floor_triangles);
     var small_box = new Mesh("small_box", small_box_vertices, small_box_triangles);
     var tall_box = new Mesh("tall_box", tall_box_vertices, tall_box_triangles);
     var ceilling = new Mesh("ceilling", ceilling_vertices, ceilling_triangles);
@@ -43,7 +43,7 @@ class Renderer {
     left_wall.diffuse_color = glm.vec3(0.0, 0.5, 0.0);
     light.emission = glm.vec3(100.0);
     light.diffuse_color = glm.vec3(0.0);
-    this.meshes.push(floor, light, small_box, tall_box, ceilling, background, left_wall, right_wall);
+    this.meshes.push(light, floor, small_box, tall_box, ceilling, background, left_wall, right_wall);
   }
 
   init() {
