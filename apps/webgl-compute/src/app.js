@@ -39,10 +39,12 @@ class Renderer {
     var background = new Mesh("background", background_vertices, background_triangles);
     var left_wall = new Mesh("left_wall", left_wall_vertices, left_wall_triangles);
     var right_wall = new Mesh("right_wall", right_wall_vertices, right_wall_triangles);
+
     right_wall.diffuse_color = glm.vec3(0.5, 0.0, 0.0);
     left_wall.diffuse_color = glm.vec3(0.0, 0.5, 0.0);
     light.emission = glm.vec3(100.0);
     light.diffuse_color = glm.vec3(0.0);
+
     this.meshes.push(light, floor, small_box, tall_box, ceilling, background, left_wall, right_wall);
   }
 
