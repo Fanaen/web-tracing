@@ -47,8 +47,11 @@ vec3 random_point_on_mesh(Mesh m, inout float seed, vec2 pixel)
 // Show the surface emission of the point hitten by the camera ray.
 // #define CAMERA_RAY_EMISSION
 
+// Show the surface normal of the point hitten by the camera ray.
+#define CAMERA_RAY_NORMAL
+
 // Don't compute DL and use lambertian BSDF to bounce.
-#define NAIVE_LAMBERTIAN_PATH_TRACING
+// #define NAIVE_LAMBERTIAN_PATH_TRACING
 
 // Compute the color for a given ray.
 vec3 color(Ray r, inout float seed, vec2 pixel)
@@ -76,6 +79,15 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
     {
         Mesh mesh = meshes[mesh_indice];
         return mesh.emission;
+    }
+
+    return vec3(0.0);
+
+#elif defined(CAMERA_RAY_NORMAL)
+
+    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) )
+    {
+        return n * 0.5 + vec3(0.5);
     }
 
     return vec3(0.0);
