@@ -37,6 +37,19 @@ vec3 random_point_on_mesh(Mesh m, inout float seed, vec2 pixel)
     return vertices[triangles[m.offset]];
 }
 
+//
+// Availables algorithms.
+//
+
+// Show the surface color of the point hitten by the camera ray.
+// #define CAMERA_RAY_COLOR
+
+// Show the surface emission of the point hitten by the camera ray.
+// #define CAMERA_RAY_EMISSION
+
+// Don't compute DL and use lambertian BSDF to bounce.
+#define NAIVE_LAMBERTIAN_PATH_TRACING
+
 // Compute the color for a given ray.
 vec3 color(Ray r, inout float seed, vec2 pixel)
 {
@@ -46,13 +59,38 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
     int depth = 0;
     int mesh_indice;
 
+
+#if defined(CAMERA_RAY_COLOR)
+
+    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) )
+    {
+        Mesh mesh = meshes[mesh_indice];
+        return mesh.diffuse;
+    }
+
+    return vec3(0.0);
+
+#elif defined(CAMERA_RAY_EMISSION)
+
+    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) )
+    {
+        Mesh mesh = meshes[mesh_indice];
+        return mesh.emission;
+    }
+
+    return vec3(0.0);
+
+#elif defined(NAIVE_LAMBERTIAN_PATH_TRACING)
+
     vec3 color = vec3(0.0);
 
-    while (depth < max_depth && hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) && t > 0.0)
+    while (depth < max_depth 
+        && hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) 
+        && t > 0.0)
     {
         Mesh mesh = meshes[mesh_indice];
 
-        // Is it a light ?
+        // Stop this path if we hit a light.
         if (mesh.emission != vec3(0.0))
         {
             // Is it the first ray ?
@@ -84,4 +122,11 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
     }
 
     return vec3(0.0);
+
+#else
+    // Default fallback.
+
+    return vec3(0.0, 1.0, 0.0);
+
+#endif
 }
