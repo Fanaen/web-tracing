@@ -27,14 +27,32 @@ bool hit_world(Ray r, float t_min, float t_max, inout float t, inout int mesh_in
         }
     }
 
-    t = best_min_t;
+    if (does_hit)
+    {
+        t = best_min_t;
+    }
 
     return does_hit;
 }
 
-vec3 random_point_on_mesh(Mesh m, inout float seed, vec2 pixel)
+vec3 random_point_on_mesh(Mesh m, int triangle, inout float seed, vec2 pixel)
 {
-    return vertices[triangles[m.offset]];
+    vec3 v0 = vertices[triangles[m.offset + triangle]];
+    vec3 v1 = vertices[triangles[m.offset + triangle + 1]];
+    vec3 v2 = vertices[triangles[m.offset + triangle + 2]];
+
+    float r = rand(seed, pixel);
+    float s = rand(seed, pixel);
+
+    if (r + s > 1.0)
+    {
+        r = 1.0 - r;
+        s = 1.0 - s;
+    }
+
+    float t = 1.0 - r - s;
+
+    return v0 * r + v1 * s + v2 * t;
 }
 
 //
@@ -175,9 +193,10 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
 // Compute direct lighting for the surface point hitten by the camera ray and don't bounce.
 #elif defined(NO_BOUNCE_DIRECT_LIGHTING)
 
-    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) && t > 0.0)
+    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n))
     {
         Mesh mesh = meshes[mesh_indice];
+        vec3 surface_normal = n;
 
         if (mesh.emission != vec3(0.0))
         {
@@ -187,19 +206,35 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
         vec3 hit_point = ray_at(r, t);
 
         // todo: Pick a random light.
-        Mesh light = meshes[0];
+        int light_indice = 0;
+        Mesh light = meshes[light_indice];
 
         // Generate a point on the light.
-        vec3 light_point = random_point_on_mesh(light, seed, pixel);
+        // todo: pick a random triangle.
+        vec3 light_point = random_point_on_mesh(light, 0, seed, pixel);
 
-        return mesh.diffuse * vec3(1.0 / length(hit_point - light_point));
-        //return mesh.diffuse;
+        vec3 lh = light_point - hit_point;
+        float dist = length(lh);
+
+        // Trace a shadow ray.
+        Ray shadow_ray;
+        shadow_ray.origin = hit_point;
+        shadow_ray.direction = normalize(lh);
+
+        if (hit_world(shadow_ray, EPSILON, dist, t, mesh_indice, n) 
+            && mesh_indice != light_indice)
+        {
+            return vec3(0.0, 0.0, 0.0);
+        }
+
+        // Compute direct lighting.
+        return mesh.diffuse * light.emission * abs(dot(surface_normal, shadow_ray.direction));
     }
 
     return vec3(0.0);
 
+// Default fallback.
 #else
-    // Default fallback.
 
     return vec3(0.0, 1.0, 0.0);
 

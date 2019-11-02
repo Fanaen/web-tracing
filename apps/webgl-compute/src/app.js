@@ -42,7 +42,7 @@ class Renderer {
 
     right_wall.diffuse_color = glm.vec3(0.5, 0.0, 0.0);
     left_wall.diffuse_color = glm.vec3(0.0, 0.5, 0.0);
-    light.emission = glm.vec3(100.0);
+    light.emission = glm.vec3(1.0);
     light.diffuse_color = glm.vec3(0.0);
 
     this.meshes.push(light, floor, small_box, tall_box, ceilling, background, left_wall, right_wall);
