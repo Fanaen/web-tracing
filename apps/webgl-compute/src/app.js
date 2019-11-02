@@ -216,6 +216,7 @@ class Renderer {
     this.context.compileShader(computeShader);
 
     if (!this.context.getShaderParameter(computeShader, this.context.COMPILE_STATUS)) {
+      console.error("Main compute shader build failed.");
       console.error(this.context.getShaderInfoLog(computeShader));
       this.context = null;
       return;
@@ -227,6 +228,7 @@ class Renderer {
     this.context.linkProgram(this.renderProgram);
 
     if (!this.context.getProgramParameter(this.renderProgram, this.context.LINK_STATUS)) {
+      console.error("Main compute shader program initialization failed.");
       console.error(this.context.getProgramInfoLog(this.renderProgram));
       this.context = null;
       return;
@@ -238,6 +240,7 @@ class Renderer {
     this.context.compileShader(blitShader);
 
     if (!this.context.getShaderParameter(blitShader, this.context.COMPILE_STATUS)) {
+      console.error("Blit shader build failed.");
       console.error(this.context.getShaderInfoLog(blitShader));
       this.context = null;
       return;
@@ -249,6 +252,7 @@ class Renderer {
     this.context.linkProgram(this.blitProgram);
 
     if (!this.context.getProgramParameter(this.blitProgram, this.context.LINK_STATUS)) {
+      console.error("Blit program initialization failed.");
       console.error(this.context.getProgramInfoLog(this.blitProgram));
       this.context = null;
       return;
