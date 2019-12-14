@@ -35,8 +35,12 @@ bool hit_world(Ray r, float t_min, float t_max, inout float t, inout int mesh_in
     return does_hit;
 }
 
-vec3 random_point_on_mesh(Mesh m, int triangle, inout float seed, vec2 pixel)
+vec3 random_point_on_mesh(Mesh m, inout float seed, vec2 pixel, out float p)
 {
+    // Pick a random triangle.
+    int triangle = int(floor(rand(seed, pixel) * float(m.triangle_count)));
+
+    // Pick vertices.
     vec3 v0 = vertices[triangles[m.offset + triangle]];
     vec3 v1 = vertices[triangles[m.offset + triangle + 1]];
     vec3 v2 = vertices[triangles[m.offset + triangle + 2]];
@@ -51,6 +55,10 @@ vec3 random_point_on_mesh(Mesh m, int triangle, inout float seed, vec2 pixel)
     }
 
     float t = 1.0 - r - s;
+    
+    float triangle_area = length(cross(v1 - v0, v2 - v0)) * 0.5;
+
+    p = (1.0 / float(m.triangle_count)) / triangle_area;
 
     return v0 * r + v1 * s + v2 * t;
 }
@@ -209,9 +217,11 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
         int light_indice = 0;
         Mesh light = meshes[light_indice];
 
+        float p = 0.0;
+
         // Generate a point on the light.
         // todo: pick a random triangle.
-        vec3 light_point = random_point_on_mesh(light, 0, seed, pixel);
+        vec3 light_point = random_point_on_mesh(light, seed, pixel, p);
 
         vec3 lh = light_point - hit_point;
         float dist = length(lh);
@@ -228,7 +238,7 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
         }
 
         // Compute direct lighting.
-        return mesh.diffuse * light.emission * abs(dot(surface_normal, shadow_ray.direction));
+        return p * mesh.diffuse * light.emission * abs(dot(surface_normal, shadow_ray.direction));
     }
 
     return vec3(0.0);
