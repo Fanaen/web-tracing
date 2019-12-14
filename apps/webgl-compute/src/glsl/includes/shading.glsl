@@ -38,7 +38,8 @@ bool hit_world(Ray r, float t_min, float t_max, inout float t, inout int mesh_in
 vec3 random_point_on_mesh(Mesh m, inout float seed, vec2 pixel, out float p)
 {
     // Pick a random triangle.
-    int triangle = int(floor(rand(seed, pixel) * float(m.triangle_count)));
+    int triangle = min(int(rand(seed, pixel) * float(m.triangle_count)), m.triangle_count - 1);
+    //int(floor(rand(seed, pixel) * float(m.triangle_count)));
 
     // Pick vertices.
     vec3 v0 = vertices[triangles[m.offset + triangle]];
@@ -83,14 +84,17 @@ vec3 random_point_on_mesh(Mesh m, inout float seed, vec2 pixel, out float p)
 // #define LIGHT_ATTENUATION
 
 // Compute direct lighting for the surface point hitten by the camera ray and don't bounce.
-#define NO_BOUNCE_DIRECT_LIGHTING
+// #define NO_BOUNCE_DIRECT_LIGHTING
+
+// Compute direct lighting for the surface point hitten by the camera ray and bounce.
+#define DIRECT_LIGHTING_WITH_NEE
 
 // Compute the color for a given ray.
 vec3 color(Ray r, inout float seed, vec2 pixel)
 {
     float t;
     vec3 n;
-    int max_depth = 10;
+    int max_depth = 100;
     int depth = 0;
     int mesh_indice;
 
@@ -200,48 +204,65 @@ vec3 color(Ray r, inout float seed, vec2 pixel)
 
 // Compute direct lighting for the surface point hitten by the camera ray and don't bounce.
 #elif defined(NO_BOUNCE_DIRECT_LIGHTING)
+// Compute direct lighting for the surface point hitten by the camera ray and bounce.
+#elif defined(DIRECT_LIGHTING_WITH_NEE)
 
-    if (hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n))
+    vec3 res = vec3(0.0);
+
+    int light_mesh_indice = 0;
+    Mesh light = meshes[light_mesh_indice];
+    int light_count = light.triangle_count;
+
+    while (depth < max_depth 
+        && hit_world(r, EPSILON, MAX_FLOAT, t, mesh_indice, n) 
+        && t > 0.0)
     {
         Mesh mesh = meshes[mesh_indice];
         vec3 surface_normal = n;
 
-        if (mesh.emission != vec3(0.0))
+        // Primary ray hit a light, stop.
+        if (mesh.emission != vec3(0.0) && depth == 0)
         {
             return mesh.emission;
         }
 
-        vec3 hit_point = ray_at(r, t);
-
-        // todo: Pick a random light.
-        int light_indice = 0;
-        Mesh light = meshes[light_indice];
-
-        float p = 0.0;
-
-        // Generate a point on the light.
-        // todo: pick a random triangle.
-        vec3 light_point = random_point_on_mesh(light, seed, pixel, p);
-
-        vec3 lh = light_point - hit_point;
-        float dist = length(lh);
-
-        // Trace a shadow ray.
-        Ray shadow_ray;
-        shadow_ray.origin = hit_point;
-        shadow_ray.direction = normalize(lh);
-
-        if (hit_world(shadow_ray, EPSILON, dist, t, mesh_indice, n) 
-            && mesh_indice != light_indice)
+        // Consider hit.
+        if (mesh.emission == vec3(0.0))
         {
-            return vec3(0.0, 0.0, 0.0);
+            vec3 hit_point = ray_at(r, t);
+
+            float light_pdf = 0.0;
+
+            // Generate a point on the light.
+            vec3 light_point = random_point_on_mesh(light, seed, pixel, light_pdf);
+
+            vec3 lh = light_point - hit_point;
+            float dist = length(lh);
+
+            // Trace a shadow ray.
+            Ray shadow_ray;
+            shadow_ray.origin = hit_point;
+            shadow_ray.direction = normalize(lh);
+
+            if (!hit_world(shadow_ray, EPSILON, dist, t, mesh_indice, n) 
+                || mesh_indice == light_mesh_indice)
+            {
+                // Direct lighting contribution.
+                res += light_pdf * mesh.diffuse * light.emission * abs(dot(surface_normal, shadow_ray.direction));
+            }
         }
 
-        // Compute direct lighting.
-        return p * mesh.diffuse * light.emission * abs(dot(surface_normal, shadow_ray.direction));
+        // Bounce.
+        vec3 p = ray_at(r, t);
+        vec2 s = rand2(seed, pixel);
+        vec3 target = p + n + sample_sphere_uniform(s);
+        r.origin = p;
+        r.direction = normalize(target - r.origin);
+
+        depth++;
     }
 
-    return vec3(0.0);
+    return res;
 
 // Default fallback.
 #else

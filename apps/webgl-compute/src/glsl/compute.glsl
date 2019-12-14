@@ -55,7 +55,6 @@ void main() {
     }
     else
     {
-        // fixme: texture initial is immutable, this is not clean.
         float factor = 1.0 / (float(uSamples) + 1.0);
         vec3 generated = finalColor * factor;
         vec3 on_screen = initial.rgb * (1.0 - factor);
